@@ -1,0 +1,13 @@
+# Virtual environment
+venv/
+
+# Python cache files
+__pycache__/
+*.pyc
+
+# Mac system files
+.DS_Store
+
+# # Data files (optional, if large or private)
+# data/*.parquet
+# data/*.csv
