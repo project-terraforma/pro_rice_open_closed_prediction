@@ -1,0 +1,147 @@
+# Data Dictionary: Open vs Closed Place Prediction
+
+This document explains each column in the parquet dataset and how it might help predict `open` vs `closed`. It also captures clarifications discussed during exploration.
+
+## Big Picture
+- The parquet file is the **source of truth** for modeling. The online schema is useful context, but the model must follow what is **actually present in the parquet**.
+- `open` is the **label** (target). All other columns are **features** or metadata.
+- `confidence` is **not the label**. It is an existence confidence signal (how sure the system is that the place exists).
+- `sources` provides provenance. If a property is not explicitly listed in `sources.property`, its provenance falls back to the **root source** (the entry with `property: ""`) for that record.
+
+## Columns
+
+### `id`
+**What it is:** Unique identifier for the place record.
+**Why it matters:** Identifier only.
+**Use for modeling:** **No** (never use as a feature).
+
+### `geometry`
+**What it is:** Encoded point location (WKB binary). Represents latitude/longitude.
+**Why it matters:** Location can correlate with open/closed if you derive spatial features.
+**Use for modeling:** **Maybe later** (requires decoding to lat/lon).
+
+### `bbox`
+**What it is:** Bounding box around the location (min/max lat/lon).
+**Why it matters:** Usually redundant with geometry; could reflect geocoding precision.
+**Use for modeling:** **Unlikely**, unless you derive spatial/precision features.
+
+### `type`
+**What it is:** Record type (typically "place").
+**Why it matters:** Likely constant.
+**Use for modeling:** **No**.
+
+### `version`
+**What it is:** Schema/record version.
+**Why it matters:** Could reflect pipeline changes or data freshness if multiple versions appear.
+**Use for modeling:** **Maybe**, if there is variation.
+
+### `sources`
+**What it is:** List of provenance objects for data sources. Each entry typically has:
+- `dataset`: data provider (e.g., Meta, Microsoft)
+- `confidence`: per-source confidence
+- `property`: JSON Pointer for which property that source asserts (e.g., `/properties/existence`)
+- `record_id`: source-specific ID
+- `update_time`: source update time
+
+**Why it matters:** More sources, more recent updates, or higher source confidence can indicate an active place.
+**Use for modeling:** **Yes** (features like source count, source confidence, recency, dataset diversity).
+
+**Important provenance rule:**
+- If a property has an explicit `sources.property`, it is attributed to that source.
+- If a property does **not** have an explicit pointer, its provenance falls back to the **root source** (the entry with `property: ""`) for that record.
+- Multiple sources **can** point to the same property, meaning multiple datasets contributed evidence.
+
+### `names`
+**What it is:** Place name info (primary, common, rules).
+**Why it matters:** Named, branded places may be more likely to be open; missing/odd names can be a weak negative signal.
+**Use for modeling:** **Maybe** (length, missingness, brand-like patterns).
+
+### `categories`
+**What it is:** Primary category plus alternate categories.
+**Why it matters:** Some categories may have higher closure rates or seasonal behavior.
+**Use for modeling:** **Yes** (category features are often strong).
+
+### `confidence`
+**What it is:** System-level confidence that the place **exists** (0–1).
+**Why it matters:** Lower confidence can correlate with closed or stale records.
+**Use for modeling:** **Yes** (strong signal).
+
+**Clarification:** This is **not** "open right now". It is about existence/validity of the place record.
+
+### `websites`
+**What it is:** List of website URLs.
+**Why it matters:** Active businesses often have websites.
+**Use for modeling:** **Yes** (presence/absence, count).
+
+### `socials`
+**What it is:** List of social media URLs.
+**Why it matters:** Active social presence can indicate an open/active place.
+**Use for modeling:** **Yes** (presence/absence).
+
+### `phones`
+**What it is:** List of phone numbers.
+**Why it matters:** Active businesses often provide phones.
+**Use for modeling:** **Yes** (presence/absence, count).
+
+### `brand`
+**What it is:** Brand metadata (if place belongs to a chain).
+**Why it matters:** Branded chain locations are more likely to be maintained and open; missing brand doesn’t imply closed.
+**Use for modeling:** **Yes** (presence/absence).
+
+### `addresses`
+**What it is:** Structured address objects (country, region, locality, etc.).
+**Why it matters:** Missing addresses can be a red flag; region/locality features might matter later.
+**Use for modeling:** **Maybe** (presence or location-based features).
+
+### `open`
+**What it is:** Label (1 = open, 0 = closed).
+**Why it matters:** This is the target you’re predicting.
+**Use for modeling:** **No** (only for training/evaluation).
+
+## Open/Closed Meaning
+- The dataset uses `open` as a **business operating status** label (open vs closed), **not time-of-day** hours.
+- This can include **temporarily closed** or **permanently closed** in the single “closed” label if upstream data collapsed them.
+
+## Data Lineage / Snapshot Assumptions
+- The parquet file is likely a **snapshot** of a larger, continuously updated system.
+- `sources.update_time` reflects when sources last updated, not necessarily the snapshot time.
+- The parquet itself does **not** tell you how the label was generated or how the snapshot was created. Confirm with data owners if needed.
+
+## Practical Modeling Takeaways
+- Treat `confidence` as a strong feature, **not** the label.
+- Use `sources` to extract: source count, recency, dataset diversity, and per-source confidence.
+- Use contact/brand presence as lighter‑weight signals.
+- Avoid using identifiers (`id`) directly.
+
+## Questions to Confirm with Data Owners
+- How exactly is the `open` label generated?
+- Is this a snapshot? If so, what date/time?
+- What is the precise meaning of `sources[*].confidence`?
+- Are there known quirks in `sources.property` or provenance merging?
+
+## Exploration Findings (Training Split Only)
+These findings are from `data/train_split.parquet` and may not represent val/test splits.
+
+### Latest `sources.update_time`
+**Finding:** The latest `sources.update_time` observed in training data is `2025-02-24T08:00:00.000Z`.  
+**Why it matters:** Suggests the snapshot is **no earlier than** this timestamp, but does **not** prove exact snapshot time.
+
+**Command used:**
+```bash
+python -c "import pandas as pd, pyarrow.parquet as pq; df=pq.read_table('data/train_split.parquet').to_pandas();\n\ndef max_update(sources):\n    if sources is None: return None\n    try:\n        times=[s.get('update_time') for s in sources if s.get('update_time')]\n        return max(times) if times else None\n    except Exception:\n        return None\n\nupdates=df['sources'].apply(max_update)\nupdates=updates.dropna()\nprint('max_update_time', updates.max())\n"
+```
+
+### Version Values in Training Data
+**Finding:** Only `version = 0` appears in the training split (all 2,397 rows).  
+**Why it matters:** `version` will not be a useful feature in training data as it has no variation.
+
+**Command used:**
+```bash
+python -c "import pyarrow.parquet as pq; import pandas as pd; df=pq.read_table('data/train_split.parquet', columns=['version']).to_pandas(); print(df['version'].value_counts().sort_index())"
+```
+
+### Batch-Like Update Pattern (Inference)
+**Finding:** The same `sources.update_time` repeats across many rows in training data, suggesting batch updates.  
+**Why it matters:** Indicates updates may arrive in batches rather than continuous per-record refreshes.
+
+**How we inferred it:** Observed repeated update timestamps when scanning the sources in training data. This is an inference, not a confirmed fact.
