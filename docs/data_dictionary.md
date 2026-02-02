@@ -145,3 +145,13 @@ python -c "import pyarrow.parquet as pq; import pandas as pd; df=pq.read_table('
 **Why it matters:** Indicates updates may arrive in batches rather than continuous per-record refreshes.
 
 **How we inferred it:** Observed repeated update timestamps when scanning the sources in training data. This is an inference, not a confirmed fact.
+
+### Recency Distribution (Training Split)
+**Finding:** Using the latest `sources.update_time` as a snapshot proxy, most records are very recent. Recency percentiles (days since snapshot proxy) are:  
+0%: 0, 10%: 0, 25%: 0, 50%: 0, 75%: 0, 90%: 154, 95%: 1527, 99%: 3763, 100%: 5821.  
+**Why it matters:** A large portion of records have update times equal to the snapshot proxy, but a long tail is many years old. This can inform “stale” thresholds.
+
+**Command used:**
+```bash
+python -c "import pandas as pd, pyarrow.parquet as pq; df=pq.read_table('data/train_split.parquet').to_pandas();\n\ndef max_update(sources):\n    if sources is None: return None\n    try:\n        times=[s.get('update_time') for s in sources if s.get('update_time')]\n        return max(times) if times else None\n    except Exception:\n        return None\n\nmax_updates=df['sources'].apply(max_update).dropna()\nmax_updates=pd.to_datetime(max_updates, errors='coerce').dropna()\nif len(max_updates)==0:\n    print('no update_time values')\n    raise SystemExit(0)\n\nsnapshot=max_updates.max()\nrecency_days=(snapshot - max_updates).dt.days\nprint('snapshot_proxy', snapshot.isoformat())\nprint('recency_days_percentiles')\nfor p in [0, 10, 25, 50, 75, 90, 95, 99, 100]:\n    val=recency_days.quantile(p/100)\n    print(f'{p:>3}% {val:.0f}')\n"
+```
