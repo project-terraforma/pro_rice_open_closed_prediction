@@ -18,13 +18,19 @@ DATA_DIR = Path(__file__).resolve().parents[2] / "data"
 
 @dataclass(frozen=True)
 class RuleConfig:
-    open_threshold: float = 3.0
-    closed_threshold: float = 0.0
+    open_threshold: float = 2.0
+    closed_threshold: float = 1.0
     default_open: bool = True
     fresh_days: int = 180
     stale_days: int = 1500
     fresh_bonus: float = 1.0
     stale_penalty: float = 1.5
+    low_conf_cutoff: float = 0.40
+    low_conf_penalty: float = 1.0
+    high_conf_cutoff: float | None = None
+    high_conf_bonus: float = 0.0
+    single_source_penalty: float = 1.0
+    no_contact_penalty: float = 1.0
 
 
 def has_value(x) -> int:
@@ -69,22 +75,17 @@ def score_row(row: pd.Series, cfg: RuleConfig) -> float:
     score = 0.0
 
     conf = row.get("confidence", np.nan)
-    if conf >= 0.95:
-        score += 3.0
-    elif conf >= 0.90:
-        score += 2.0
-    elif conf >= 0.80:
-        score += 1.0
-    elif conf < 0.65:
-        score -= 2.0
-    elif conf < 0.75:
-        score -= 1.0
+    if not np.isnan(conf):
+        if cfg.high_conf_cutoff is not None and conf >= cfg.high_conf_cutoff:
+            score += cfg.high_conf_bonus
+        if conf < cfg.low_conf_cutoff:
+            score -= cfg.low_conf_penalty
 
     sources_n = row.get("sources_n", 0)
     if sources_n >= 2:
         score += 1.0
     elif sources_n == 1:
-        score -= 1.0
+        score -= cfg.single_source_penalty
 
     max_conf = row.get("max_source_conf", float("nan"))
     if not np.isnan(max_conf):
@@ -107,7 +108,7 @@ def score_row(row: pd.Series, cfg: RuleConfig) -> float:
     if has_address:
         score += 0.5
     if not has_website and not has_phone:
-        score -= 1.0
+        score -= cfg.no_contact_penalty
 
     recency_days = row.get("recency_days", np.nan)
     if not np.isnan(recency_days):
@@ -251,6 +252,88 @@ def run_recency_sweep(df: pd.DataFrame) -> None:
     )
 
 
+def run_confidence_sweep(df: pd.DataFrame) -> None:
+    results = []
+    for low_cutoff in [0.2, 0.3, 0.4]:
+        for low_penalty in [1.0, 1.5, 2.0]:
+            cfg = RuleConfig(low_conf_cutoff=low_cutoff, low_conf_penalty=low_penalty, high_conf_cutoff=None)
+            scores = df.apply(lambda r: score_row(r, cfg), axis=1).to_numpy()
+            y_true = df["open"].to_numpy()
+            preds = np.array([predict_from_score(s, cfg) for s in scores])
+            metrics = evaluate(y_true, preds)
+            results.append(
+                {
+                    "low_conf_cutoff": low_cutoff,
+                    "low_conf_penalty": low_penalty,
+                    **metrics,
+                }
+            )
+
+    results = pd.DataFrame(results)
+    print("\n=== Confidence sweep (top by closed recall) ===")
+    print(
+        results.sort_values(["recall_closed", "precision_closed"], ascending=False)
+        .head(5)
+        .to_string(index=False)
+    )
+    print("\n=== Confidence sweep (top by closed precision) ===")
+    print(
+        results.sort_values(["precision_closed", "recall_closed"], ascending=False)
+        .head(5)
+        .to_string(index=False)
+    )
+    print("\n=== Confidence sweep (top by open precision) ===")
+    print(
+        results.sort_values(["precision_open", "recall_open"], ascending=False)
+        .head(5)
+        .to_string(index=False)
+    )
+
+
+def run_penalty_sweep(df: pd.DataFrame) -> None:
+    results = []
+    for stale_penalty in [1.5, 2.0, 3.0]:
+        for single_source_penalty in [1.0, 2.0]:
+            for no_contact_penalty in [1.0, 2.0]:
+                cfg = RuleConfig(
+                    stale_penalty=stale_penalty,
+                    single_source_penalty=single_source_penalty,
+                    no_contact_penalty=no_contact_penalty,
+                )
+                scores = df.apply(lambda r: score_row(r, cfg), axis=1).to_numpy()
+                y_true = df["open"].to_numpy()
+                preds = np.array([predict_from_score(s, cfg) for s in scores])
+                metrics = evaluate(y_true, preds)
+                results.append(
+                    {
+                        "stale_penalty": stale_penalty,
+                        "single_source_penalty": single_source_penalty,
+                        "no_contact_penalty": no_contact_penalty,
+                        **metrics,
+                    }
+                )
+
+    results = pd.DataFrame(results)
+    print("\n=== Penalty sweep (top by closed recall) ===")
+    print(
+        results.sort_values(["recall_closed", "precision_closed"], ascending=False)
+        .head(5)
+        .to_string(index=False)
+    )
+    print("\n=== Penalty sweep (top by closed precision) ===")
+    print(
+        results.sort_values(["precision_closed", "recall_closed"], ascending=False)
+        .head(5)
+        .to_string(index=False)
+    )
+    print("\n=== Penalty sweep (top by open precision) ===")
+    print(
+        results.sort_values(["precision_open", "recall_open"], ascending=False)
+        .head(5)
+        .to_string(index=False)
+    )
+
+
 def main(split: str = "val") -> None:
     split_path = DATA_DIR / f"{split}_split.parquet"
     if not split_path.exists():
@@ -285,6 +368,8 @@ if __name__ == "__main__":
     parser.add_argument("--split", default="val", choices=["train", "val", "test"])
     parser.add_argument("--sweep", action="store_true", help="Run threshold sweep")
     parser.add_argument("--recency-sweep", action="store_true", help="Sweep stale recency settings")
+    parser.add_argument("--confidence-sweep", action="store_true", help="Sweep low confidence settings")
+    parser.add_argument("--penalty-sweep", action="store_true", help="Sweep stale/single-source/no-contact penalties")
     args = parser.parse_args()
 
     main(split=args.split)
@@ -298,3 +383,11 @@ if __name__ == "__main__":
         df = pd.read_parquet(DATA_DIR / f"{args.split}_split.parquet")
         df = add_features(df)
         run_recency_sweep(df)
+    if args.confidence_sweep:
+        df = pd.read_parquet(DATA_DIR / f"{args.split}_split.parquet")
+        df = add_features(df)
+        run_confidence_sweep(df)
+    if args.penalty_sweep:
+        df = pd.read_parquet(DATA_DIR / f"{args.split}_split.parquet")
+        df = add_features(df)
+        run_penalty_sweep(df)

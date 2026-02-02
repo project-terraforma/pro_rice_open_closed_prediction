@@ -59,13 +59,15 @@ This improves closed recall without overly damaging open precision.
 
 ## Final Defaults (Balanced)
 Current defaults in `src/models/rules_only_baseline.py`:
-- `open_threshold = 3.0`
-- `closed_threshold = 0.0`
+- `open_threshold = 2.0`
+- `closed_threshold = 1.0`
 - `default_open = True`
 - `fresh_days = 180`
 - `stale_days = 1500`
 - `fresh_bonus = 1.0`
 - `stale_penalty = 1.5`
+- `low_conf_cutoff = 0.40`
+- `low_conf_penalty = 1.0`
 
 ## Why We Consider This “Rules-Only”
 All weights, thresholds, and logic are **hand-set** and **deterministic**.  
