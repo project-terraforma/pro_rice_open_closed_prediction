@@ -85,6 +85,31 @@ Current defaults in `src/models/rules_only_baseline.py`:
 - `low_conf_cutoff = 0.40`
 - `low_conf_penalty = 1.0`
 
+## Final Metrics (Validation and Test)
+Reported with the finalized rules and thresholds.
+
+### Validation (val split)
+- Command: `python src/models/rules_only_baseline.py --split val`
+- Confusion: tp=553, tn=25, fp=38, fn=69
+- Precision (open): 0.936
+- Recall (open): 0.889
+- F1 (open): 0.912
+- Precision (closed): 0.266
+- Recall (closed): 0.397
+- F1 (closed): 0.318
+- Accuracy: 0.844
+
+### Test (test split)
+- Command: `python src/models/rules_only_baseline.py --split test`
+- Confusion: tp=268, tn=11, fp=20, fn=44
+- Precision (open): 0.931
+- Recall (open): 0.859
+- F1 (open): 0.893
+- Precision (closed): 0.200
+- Recall (closed): 0.355
+- F1 (closed): 0.256
+- Accuracy: 0.813
+
 ## Why We Consider This “Rules-Only”
 All weights, thresholds, and logic are **hand-set** and **deterministic**.  
 No parameters are learned from data training, so it remains a rules-based baseline.
