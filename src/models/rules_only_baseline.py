@@ -25,12 +25,20 @@ class RuleConfig:
     stale_days: int = 1500
     fresh_bonus: float = 1.0
     stale_penalty: float = 1.5
-    low_conf_cutoff: float = 0.40
-    low_conf_penalty: float = 1.0
+    low_conf_cutoff: float | None = None
+    low_conf_penalty: float = 0.0
     high_conf_cutoff: float | None = None
     high_conf_bonus: float = 0.0
     single_source_penalty: float = 1.0
     no_contact_penalty: float = 1.0
+    use_recency: bool = True
+    use_socials: bool = True
+    use_addresses: bool = True
+    use_source_conf: bool = True
+    source_conf_high: float = 0.90
+    source_conf_low: float = 0.70
+    source_conf_bonus: float = 1.0
+    source_conf_penalty: float = 1.0
 
 
 def has_value(x) -> int:
@@ -51,16 +59,6 @@ def count_sources(x) -> int:
         return 0
 
 
-def max_source_conf(sources) -> float:
-    if sources is None:
-        return float("nan")
-    try:
-        vals = [s.get("confidence") for s in sources if s.get("confidence") is not None]
-        return max(vals) if vals else float("nan")
-    except Exception:
-        return float("nan")
-
-
 def max_update_time(sources):
     if sources is None:
         return None
@@ -71,6 +69,16 @@ def max_update_time(sources):
         return None
 
 
+def max_source_conf(sources) -> float:
+    if sources is None:
+        return float("nan")
+    try:
+        vals = [s.get("confidence") for s in sources if s.get("confidence") is not None]
+        return max(vals) if vals else float("nan")
+    except Exception:
+        return float("nan")
+
+
 def score_row(row: pd.Series, cfg: RuleConfig) -> float:
     score = 0.0
 
@@ -78,7 +86,7 @@ def score_row(row: pd.Series, cfg: RuleConfig) -> float:
     if not np.isnan(conf):
         if cfg.high_conf_cutoff is not None and conf >= cfg.high_conf_cutoff:
             score += cfg.high_conf_bonus
-        if conf < cfg.low_conf_cutoff:
+        if cfg.low_conf_cutoff is not None and conf < cfg.low_conf_cutoff:
             score -= cfg.low_conf_penalty
 
     sources_n = row.get("sources_n", 0)
@@ -87,17 +95,18 @@ def score_row(row: pd.Series, cfg: RuleConfig) -> float:
     elif sources_n == 1:
         score -= cfg.single_source_penalty
 
-    max_conf = row.get("max_source_conf", float("nan"))
-    if not np.isnan(max_conf):
-        if max_conf >= 0.90:
-            score += 1.0
-        elif max_conf < 0.70:
-            score -= 1.0
+    if cfg.use_source_conf:
+        max_conf = row.get("max_source_conf", float("nan"))
+        if not np.isnan(max_conf):
+            if max_conf >= cfg.source_conf_high:
+                score += cfg.source_conf_bonus
+            elif max_conf < cfg.source_conf_low:
+                score -= cfg.source_conf_penalty
 
     has_website = row.get("websites_present", 0)
     has_phone = row.get("phones_present", 0)
-    has_social = row.get("socials_present", 0)
-    has_address = row.get("addresses_present", 0)
+    has_social = row.get("socials_present", 0) if cfg.use_socials else 0
+    has_address = row.get("addresses_present", 0) if cfg.use_addresses else 0
 
     if has_website:
         score += 1.0
@@ -110,12 +119,13 @@ def score_row(row: pd.Series, cfg: RuleConfig) -> float:
     if not has_website and not has_phone:
         score -= cfg.no_contact_penalty
 
-    recency_days = row.get("recency_days", np.nan)
-    if not np.isnan(recency_days):
-        if recency_days <= cfg.fresh_days:
-            score += cfg.fresh_bonus
-        elif recency_days >= cfg.stale_days:
-            score -= cfg.stale_penalty
+    if cfg.use_recency:
+        recency_days = row.get("recency_days", np.nan)
+        if not np.isnan(recency_days):
+            if recency_days <= cfg.fresh_days:
+                score += cfg.fresh_bonus
+            elif recency_days >= cfg.stale_days:
+                score -= cfg.stale_penalty
 
     return score
 
@@ -334,6 +344,31 @@ def run_penalty_sweep(df: pd.DataFrame) -> None:
     )
 
 
+def run_ablation_sweep(df: pd.DataFrame) -> None:
+    variants = [
+        ("baseline", RuleConfig()),
+        ("no_recency", RuleConfig(use_recency=False)),
+        ("no_socials", RuleConfig(use_socials=False)),
+        ("no_addresses", RuleConfig(use_addresses=False)),
+        ("no_recency_no_socials", RuleConfig(use_recency=False, use_socials=False)),
+        ("no_recency_no_addresses", RuleConfig(use_recency=False, use_addresses=False)),
+        ("no_socials_no_addresses", RuleConfig(use_socials=False, use_addresses=False)),
+        ("core_only", RuleConfig(use_recency=False, use_socials=False, use_addresses=False)),
+    ]
+
+    results = []
+    for name, cfg in variants:
+        scores = df.apply(lambda r: score_row(r, cfg), axis=1).to_numpy()
+        y_true = df["open"].to_numpy()
+        preds = np.array([predict_from_score(s, cfg) for s in scores])
+        metrics = evaluate(y_true, preds)
+        results.append({"variant": name, **metrics})
+
+    results = pd.DataFrame(results)
+    print("\n=== Ablation sweep (sorted by closed F1) ===")
+    print(results.sort_values(["f1_closed", "precision_closed"], ascending=False).to_string(index=False))
+
+
 def main(split: str = "val") -> None:
     split_path = DATA_DIR / f"{split}_split.parquet"
     if not split_path.exists():
@@ -370,6 +405,7 @@ if __name__ == "__main__":
     parser.add_argument("--recency-sweep", action="store_true", help="Sweep stale recency settings")
     parser.add_argument("--confidence-sweep", action="store_true", help="Sweep low confidence settings")
     parser.add_argument("--penalty-sweep", action="store_true", help="Sweep stale/single-source/no-contact penalties")
+    parser.add_argument("--ablation-sweep", action="store_true", help="Ablate feature groups")
     args = parser.parse_args()
 
     main(split=args.split)
@@ -391,3 +427,7 @@ if __name__ == "__main__":
         df = pd.read_parquet(DATA_DIR / f"{args.split}_split.parquet")
         df = add_features(df)
         run_penalty_sweep(df)
+    if args.ablation_sweep:
+        df = pd.read_parquet(DATA_DIR / f"{args.split}_split.parquet")
+        df = add_features(df)
+        run_ablation_sweep(df)

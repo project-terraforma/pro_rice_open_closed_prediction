@@ -11,7 +11,7 @@ This document explains the thought process behind the rules-only baseline, the t
 ## Feature Selection (Low-Cost Only)
 Included features:
 - Global `confidence` (existence confidence).
-- `sources` signals: count of sources and max per-source confidence.
+- `sources` signals: count of sources.
 - Presence of contact signals: `websites`, `phones`, `socials`, `addresses`.
 - Recency (derived from `sources.update_time`, using latest timestamp as a snapshot proxy).
 
@@ -68,6 +68,13 @@ Result:
 - Best balance came from **`low_conf_cutoff = 0.40`** and **`low_conf_penalty = 1.0`**, which improved closed metrics while keeping open performance strong.
 - This aligns with the idea that *existence confidence ≠ operating status*.
 
+### Provider Guidance (Confidence Removed)
+After feedback from the Overture team, we **removed confidence signals** in the rules baseline:
+- The confidence score is computed provider-side and can be constant for some sources.
+- For modeling, we were advised to see how far we can get **without** confidence.
+
+We keep the earlier confidence-based sweeps and metrics **for documentation purposes only** (historical comparison), but the **current baseline does not use confidence** (global or per-source).
+
 ## Threshold Re-Sweep (After Confidence Change)
 After adjusting confidence, we re-ran the score threshold sweep:
 - Selected **`open_threshold = 2.0`** and **`closed_threshold = 1.0`** as a better balance point.
@@ -82,33 +89,88 @@ Current defaults in `src/models/rules_only_baseline.py`:
 - `stale_days = 1500`
 - `fresh_bonus = 1.0`
 - `stale_penalty = 1.5`
-- `low_conf_cutoff = 0.40`
-- `low_conf_penalty = 1.0`
+- `low_conf_cutoff = None`
+- `low_conf_penalty = 0.0`
 
 ## Final Metrics (Validation and Test)
-Reported with the finalized rules and thresholds.
+Reported with the finalized rules and thresholds. We keep **two variants** until the meaning of per‑source confidence is clarified.
 
-### Validation (val split)
-- Command: `python src/models/rules_only_baseline.py --split val`
-- Confusion: tp=553, tn=25, fp=38, fn=69
-- Precision (open): 0.936
-- Recall (open): 0.889
-- F1 (open): 0.912
-- Precision (closed): 0.266
-- Recall (closed): 0.397
-- F1 (closed): 0.318
-- Accuracy: 0.844
+### Variant A: No confidence signals (recommended default)
+**Note:** Does not use global confidence or per‑source confidence.
 
-### Test (test split)
-- Command: `python src/models/rules_only_baseline.py --split test`
-- Confusion: tp=268, tn=11, fp=20, fn=44
-- Precision (open): 0.931
-- Recall (open): 0.859
-- F1 (open): 0.893
-- Precision (closed): 0.200
-- Recall (closed): 0.355
-- F1 (closed): 0.256
-- Accuracy: 0.813
+**Validation (val split)**  
+Command: `python src/models/rules_only_baseline.py --split val`  
+Confusion: tp=585, tn=16, fp=47, fn=37  
+Precision (open): 0.926  
+Recall (open): 0.941  
+F1 (open): 0.933  
+Precision (closed): 0.302  
+Recall (closed): 0.254  
+F1 (closed): 0.276  
+Accuracy: 0.877
+
+**Test (test split)**  
+Command: `python src/models/rules_only_baseline.py --split test`  
+Confusion: tp=290, tn=3, fp=28, fn=22  
+Precision (open): 0.912  
+Recall (open): 0.929  
+F1 (open): 0.921  
+Precision (closed): 0.120  
+Recall (closed): 0.097  
+F1 (closed): 0.107  
+Accuracy: 0.854
+
+### Variant B: With per‑source confidence (experimental)
+**Note:** Uses per‑source confidence; keep only for comparison until meaning is confirmed.
+
+**Validation (val split)**  
+Command: `python src/models/rules_only_baseline.py --split val` (with `use_source_conf=True`)  
+Confusion: tp=574, tn=21, fp=42, fn=48  
+Precision (open): 0.932  
+Recall (open): 0.923  
+F1 (open): 0.927  
+Precision (closed): 0.304  
+Recall (closed): 0.333  
+F1 (closed): 0.318  
+Accuracy: 0.869
+
+**Test (test split)**  
+Command: `python src/models/rules_only_baseline.py --split test` (with `use_source_conf=True`)  
+Confusion: tp=278, tn=10, fp=21, fn=34  
+Precision (open): 0.930  
+Recall (open): 0.891  
+F1 (open): 0.910  
+Precision (closed): 0.227  
+Recall (closed): 0.323  
+F1 (closed): 0.267  
+Accuracy: 0.840
+
+## Recent Experiments (Post-Confidence Removal)
+
+### Threshold Sweep
+After removing confidence and per-source confidence, we re-ran the threshold sweep.
+Observation: the sweep did not change predictions; top rows were identical across open/closed thresholds.
+
+### Ablation Sweep
+We tested removing feature groups to see if simpler rules improved performance:
+- **Baseline** remained best overall for accuracy and open metrics.
+- Removing socials + addresses slightly improved closed F1, but significantly reduced open recall and accuracy.
+- Removing recency or using a “core only” rule set degraded performance.
+
+Conclusion: keep the baseline feature set.
+
+## Historical Results (Confidence-Based)
+These are retained for comparison only; they were produced **before** removing confidence from the rules.
+
+- Validation (val split) with confidence:  
+  tp=553, tn=25, fp=38, fn=69,  
+  Precision(open)=0.936, Recall(open)=0.889, F1(open)=0.912,  
+  Precision(closed)=0.266, Recall(closed)=0.397, F1(closed)=0.318, Accuracy=0.844
+
+- Test (test split) with confidence:  
+  tp=268, tn=11, fp=20, fn=44,  
+  Precision(open)=0.931, Recall(open)=0.859, F1(open)=0.893,  
+  Precision(closed)=0.200, Recall(closed)=0.355, F1(closed)=0.256, Accuracy=0.813
 
 ## Why We Consider This “Rules-Only”
 All weights, thresholds, and logic are **hand-set** and **deterministic**.  
