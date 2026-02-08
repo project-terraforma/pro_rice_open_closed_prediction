@@ -16,6 +16,7 @@
 | **Two-Stage LR (No Confidence)** | 0.904 | 0.916 | 0.984 | 0.375 | 0.097 |
 | **Two-Stage LR (Source Confidence)** | 0.898 | 0.924 | 0.968 | 0.375 | 0.194 |
 | **Random Forest** | 0.837 | 0.935 | 0.881 | 0.245 | 0.387 |
+| **Two-Stage LightGBM (No Confidence)** | 0.895 | 0.921 | 0.968 | 0.333 | 0.161 |
 
 ---
 
@@ -92,3 +93,19 @@ Test Report:
 Open: Precision: 0.935    Recall: 0.881    F1: 0.908
 Closed: Precision: 0.245    Recall: 0.387    F1: 0.300
 Accuracy: 0.837
+
+### Two-Stage LightGBM (No Confidence)
+
+Validation Report:
+Open: Precision: 0.921    Recall: 0.960    F1: 0.940
+Closed: Precision: 0.324    Recall: 0.190    F1: 0.240
+Accuracy: 0.889
+
+Test Report:
+Open: Precision: 0.921    Recall: 0.968    F1: 0.944
+Closed: Precision: 0.333    Recall: 0.161    F1: 0.217
+Accuracy: 0.895
+
+Notes:
+- Single-stage LightGBM performed worse (Accuracy ~0.708, Closed F1 ~0.19).
+- A small hyperparameter sweep did not improve closed F1 beyond ~0.21.
