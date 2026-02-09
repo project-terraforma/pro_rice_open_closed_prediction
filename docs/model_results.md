@@ -18,6 +18,8 @@
 | **Random Forest** | 0.837 | 0.935 | 0.881 | 0.245 | 0.387 |
 | **Two-Stage LightGBM (No Confidence)** | 0.895 | 0.921 | 0.968 | 0.333 | 0.161 |
 
+| **Less Conservative Two-Stage LR (No Confidence)** | 0.857 | 0.934 | 0.907 | 0.275 | 0.355 |
+
 ---
 
 ## Detailed Model Metrics

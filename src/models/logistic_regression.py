@@ -14,6 +14,11 @@ Usage:
     python logistic_regression_unified.py --mode single --confidence source
     python logistic_regression_unified.py --mode two-stage --confidence none
     python logistic_regression_unified.py --mode two-stage --confidence source
+
+obviously open:
+1. has_websites AND has_phones AND has_socials AND recency_days <= 180 days
+2. has_brand AND num_websites >= 2 AND has_phones AND recency_days <= 730 days
+3. num_sources >= 4 AND has_websites AND has_phones AND recency_days <= 180 days
 """
 
 import pandas as pd
@@ -59,26 +64,43 @@ class UnifiedLogisticRegression:
         Returns: boolean mask where True = obviously open, False = uncertain
         
         Uses rich signals instead of global confidence scores.
+        Balanced approach: stricter than original but not too aggressive.
         """
+        # Calculate recency for temporal filtering
+        max_update_times = df['sources'].apply(
+            lambda x: max([d.get('update_time') for d in x if d.get('update_time')] or [None])
+        )
+        max_update_times = pd.to_datetime(max_update_times, errors='coerce')
+        snapshot_time = max_update_times.max()
+        
+        if pd.notna(snapshot_time):
+            recency_days = (snapshot_time - max_update_times).dt.days.fillna(9999)
+        else:
+            recency_days = pd.Series([9999] * len(df), index=df.index)
+        
+        # Data is "very fresh" if updated within 180 days (6 months)
+        is_very_fresh = recency_days <= 180
+        # Not too stale (within 2 years)
+        is_not_stale = recency_days <= 730
+        
         obviously_open = (
-            # Multiple contact methods (strong signal of active business)
+            # Triple contact methods with very fresh data (strongest signal)
             ((df['websites'].apply(lambda x: x is not None and len(x) > 0)) &
              (df['phones'].apply(lambda x: x is not None and len(x) > 0)) &
-             (df['socials'].apply(lambda x: x is not None and len(x) > 0))) |
+             (df['socials'].apply(lambda x: x is not None and len(x) > 0)) &
+             is_very_fresh) |
             
-            # Brand presence with multiple contacts
+            # Brand + multiple websites + phones + not stale
             ((df['brand'].apply(lambda x: x is not None)) &
-             (df['websites'].apply(lambda x: x is not None and len(x) > 0)) &
-             (df['phones'].apply(lambda x: x is not None and len(x) > 0))) |
+             (df['websites'].apply(lambda x: x is not None and len(x) >= 2)) &
+             (df['phones'].apply(lambda x: x is not None and len(x) > 0)) &
+             is_not_stale) |
             
-            # Multiple sources with rich contact info
-            ((df['sources'].apply(lambda x: len(x) >= 3)) & 
+            # Many sources (4+) with dual contacts and fresh data
+            ((df['sources'].apply(lambda x: len(x) >= 4)) & 
              (df['websites'].apply(lambda x: x is not None and len(x) > 0)) &
-             (df['phones'].apply(lambda x: x is not None and len(x) > 0))) |
-            
-            # Multiple websites with phones (indicates active online presence)
-            ((df['websites'].apply(lambda x: x is not None and len(x) >= 2)) &
-             (df['phones'].apply(lambda x: x is not None and len(x) > 0)))
+             (df['phones'].apply(lambda x: x is not None and len(x) > 0)) &
+             is_very_fresh)
         )
         
         return obviously_open
@@ -319,9 +341,10 @@ class UnifiedLogisticRegression:
             print(f"  Closed: {(~y_uncertain.astype(bool)).sum()} ({(~y_uncertain.astype(bool)).mean():.1%})")
             print(f"  Features: {X_uncertain.shape[1]}")
             
-            # Higher weight for closed class since we're using uncertain cases
+            # Balanced class weight to improve closed recall while maintaining reasonable precision
+            # Changed from {0: 3, 1: 1} to 'balanced' for automatic calculation
             self.model = LogisticRegression(
-                class_weight={0: 3, 1: 1},
+                class_weight='balanced',
                 random_state=42, 
                 max_iter=1000
             )
