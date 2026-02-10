@@ -63,44 +63,26 @@ class UnifiedLogisticRegression:
         Stage 1: Rule-based filter to identify obviously open places.
         Returns: boolean mask where True = obviously open, False = uncertain
         
-        Uses rich signals instead of global confidence scores.
-        Balanced approach: stricter than original but not too aggressive.
+        Uses dataset diversity as the primary signal: places confirmed across
+        multiple independent datasets (e.g. meta + msft) with rich contact info
+        are very likely open.
         """
-        # Calculate recency for temporal filtering
-        max_update_times = df['sources'].apply(
-            lambda x: max([d.get('update_time') for d in x if d.get('update_time')] or [None])
+        # Dataset diversity: presence in multiple independent datasets
+        has_multi_dataset = df['sources'].apply(
+            lambda x: len(set(s.get('dataset', '') for s in x)) >= 2
         )
-        max_update_times = pd.to_datetime(max_update_times, errors='coerce')
-        snapshot_time = max_update_times.max()
         
-        if pd.notna(snapshot_time):
-            recency_days = (snapshot_time - max_update_times).dt.days.fillna(9999)
-        else:
-            recency_days = pd.Series([9999] * len(df), index=df.index)
-        
-        # Data is "very fresh" if updated within 180 days (6 months)
-        is_very_fresh = recency_days <= 180
-        # Not too stale (within 2 years)
-        is_not_stale = recency_days <= 730
+        has_websites = df['websites'].apply(lambda x: x is not None and len(x) > 0)
+        has_phones = df['phones'].apply(lambda x: x is not None and len(x) > 0)
+        has_socials = df['socials'].apply(lambda x: x is not None and len(x) > 0)
+        has_many_sources = df['sources'].apply(lambda x: len(x) >= 3)
         
         obviously_open = (
-            # Triple contact methods with very fresh data (strongest signal)
-            ((df['websites'].apply(lambda x: x is not None and len(x) > 0)) &
-             (df['phones'].apply(lambda x: x is not None and len(x) > 0)) &
-             (df['socials'].apply(lambda x: x is not None and len(x) > 0)) &
-             is_very_fresh) |
+            # Multi-dataset + triple contacts (strongest signal)
+            (has_multi_dataset & has_websites & has_phones & has_socials) |
             
-            # Brand + multiple websites + phones + not stale
-            ((df['brand'].apply(lambda x: x is not None)) &
-             (df['websites'].apply(lambda x: x is not None and len(x) >= 2)) &
-             (df['phones'].apply(lambda x: x is not None and len(x) > 0)) &
-             is_not_stale) |
-            
-            # Many sources (4+) with dual contacts and fresh data
-            ((df['sources'].apply(lambda x: len(x) >= 4)) & 
-             (df['websites'].apply(lambda x: x is not None and len(x) > 0)) &
-             (df['phones'].apply(lambda x: x is not None and len(x) > 0)) &
-             is_very_fresh)
+            # Many sources (3+) + multi-dataset + dual contacts
+            (has_many_sources & has_multi_dataset & has_websites & has_phones)
         )
         
         return obviously_open
@@ -199,7 +181,9 @@ class UnifiedLogisticRegression:
         
         # === TEMPORAL FEATURES ===
         max_update_times = df['sources'].apply(lambda x: max([d.get('update_time') for d in x if d.get('update_time')] or [None]))
-        max_update_times = pd.to_datetime(max_update_times, errors='coerce')
+        max_update_times = pd.to_datetime(max_update_times, errors='coerce', utc=True)
+        # Convert to timezone-naive
+        max_update_times = max_update_times.dt.tz_localize(None)
         snapshot_time = max_update_times.max()
         if pd.notna(snapshot_time):
             features['recency_days'] = (snapshot_time - max_update_times).dt.days.fillna(-1)
@@ -214,7 +198,8 @@ class UnifiedLogisticRegression:
         
         # Source temporal diversity
         def temporal_diversity(sources):
-            times = [pd.to_datetime(s.get('update_time'), errors='coerce') for s in sources if s.get('update_time')]
+            times = [pd.to_datetime(s.get('update_time'), errors='coerce', utc=True) for s in sources if s.get('update_time')]
+            times = [t.tz_localize(None) if pd.notna(t) and t.tz is not None else t for t in times]
             times = [t for t in times if pd.notna(t)]
             if len(times) <= 1:
                 return 0
@@ -233,6 +218,7 @@ class UnifiedLogisticRegression:
         
         features['num_datasets'] = df['sources'].apply(dataset_diversity)
         features['has_multiple_datasets'] = (features['num_datasets'] >= 2).astype(int)
+        features['single_source'] = (features['num_sources'] == 1).astype(int)
         
         # === COMPOSITE COMPLETENESS FEATURES ===
         features['completeness_score'] = (
@@ -254,6 +240,10 @@ class UnifiedLogisticRegression:
         features['brand_with_contacts'] = features['has_brand'] * features['contact_diversity']
         features['recent_with_contacts'] = features['very_fresh'] * features['contact_diversity']
         features['multiple_sources_with_contacts'] = features['has_multiple_sources'] * features['contact_diversity']
+        
+        # === MULTI-DATASET INTERACTION FEATURES ===
+        features['multi_dataset_with_contacts'] = features['has_multiple_datasets'] * features['contact_diversity']
+        features['single_source_no_socials'] = (features['single_source'] * (1 - features['has_socials'])).astype(int)
         
         # === SOURCE CONFIDENCE FEATURES (optional) ===
         if self.use_source_confidence:
