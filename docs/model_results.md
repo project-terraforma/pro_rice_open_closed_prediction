@@ -1,5 +1,7 @@
 # Model Results: Open/Closed Place Prediction
 
+Note: `data/matching_validation/` contains matching-validation datasets (`label=match/no-match`) and is excluded from all open/closed results below.
+
 **Dataset:** 2,397 training samples, 685 validation samples, 343 test samples  
 **Class Distribution (Test):** 91% open, 9% closed (severe imbalance)  
 **Objective:** Maximize accuracy while minimizing false closed predictions (users thinking places are closed when they're actually open)
