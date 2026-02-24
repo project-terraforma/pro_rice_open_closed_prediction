@@ -11,3 +11,5 @@ __pycache__/
 # # Data files (optional, if large or private)
 # data/*.parquet
 # data/*.csv
+config.bat
+node_modules

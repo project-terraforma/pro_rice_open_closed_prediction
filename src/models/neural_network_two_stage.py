@@ -1,63 +1,46 @@
 """
-Unified Logistic Regression Model for Open/Closed Prediction
+Two-Stage Neural Network Model for Open/Closed Prediction
 
-Supports 4 variants:
-1. Single-stage, no confidence features
-2. Single-stage, with source confidence features
-3. Two-stage, no confidence features
-4. Two-stage, with source confidence features
+This model uses a two-stage approach:
+1. Stage 1: Rule-based filter to identify obviously open places
+2. Stage 2: Neural network classifier for uncertain cases
 
-No global confidence features are used in any variant.
-
-Usage:
-    python logistic_regression_unified.py --mode single --confidence none
-    python logistic_regression_unified.py --mode single --confidence source
-    python logistic_regression_unified.py --mode two-stage --confidence none
-    python logistic_regression_unified.py --mode two-stage --confidence source
-
-obviously open:
-1. has_websites AND has_phones AND has_socials AND recency_days <= 180 days
-2. has_brand AND num_websites >= 2 AND has_phones AND recency_days <= 730 days
-3. num_sources >= 4 AND has_websites AND has_phones AND recency_days <= 180 days
+No confidence features are used.
 """
 
 import pandas as pd
 import numpy as np
-from sklearn.linear_model import LogisticRegression
+from sklearn.neural_network import MLPClassifier
+from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
 import joblib
 import os
 import argparse
 
 
-class UnifiedLogisticRegression:
+class TwoStageNeuralNetwork:
     """
-    Unified logistic regression model supporting single-stage and two-stage modes,
-    with optional source confidence features.
+    Two-stage neural network model for open/closed prediction.
+    Stage 1: Rule-based filter for obviously open places
+    Stage 2: Neural network for uncertain cases
     """
     
-    def __init__(self, mode: str = "two-stage", use_source_confidence: bool = False):
+    def __init__(self, hidden_layer_sizes=(100, 50), random_state=42, decision_threshold=0.5):
         """
         Initialize the model.
         
         Args:
-            mode: "single" or "two-stage"
-            use_source_confidence: If True, include source-level confidence features
+            hidden_layer_sizes: Tuple of hidden layer sizes for the neural network
+            random_state: Random state for reproducibility
+            decision_threshold: Threshold for classifying as open (default 0.5)
         """
-        if mode not in ("single", "two-stage"):
-            raise ValueError("mode must be 'single' or 'two-stage'")
-        
-        self.mode = mode
-        self.use_source_confidence = use_source_confidence
+        self.hidden_layer_sizes = hidden_layer_sizes
+        self.random_state = random_state
+        self.decision_threshold = decision_threshold
         self.model = None
+        self.scaler = StandardScaler()
         self._feature_names = None
     
-    def _get_variant_name(self) -> str:
-        """Return a human-readable name for this variant."""
-        conf_str = "with Source Confidence" if self.use_source_confidence else "No Confidence"
-        mode_str = "Two-Stage" if self.mode == "two-stage" else "Single-Stage"
-        return f"{mode_str} LR ({conf_str})"
-
     def stage1_filter(self, df: pd.DataFrame) -> pd.Series:
         """
         Stage 1: Rule-based filter to identify obviously open places.
@@ -100,7 +83,8 @@ class UnifiedLogisticRegression:
         - Temporal features
         - Dataset diversity features
         - Composite/interaction features
-        - Source confidence features (optional)
+        
+        No confidence features are used.
         """
         features = pd.DataFrame(index=df.index)
         
@@ -245,67 +229,15 @@ class UnifiedLogisticRegression:
         features['multi_dataset_with_contacts'] = features['has_multiple_datasets'] * features['contact_diversity']
         features['single_source_no_socials'] = (features['single_source'] * (1 - features['has_socials'])).astype(int)
         
-        # === SOURCE CONFIDENCE FEATURES (optional) ===
-        if self.use_source_confidence:
-            features['mean_source_conf'] = df['sources'].apply(
-                lambda x: np.mean([d['confidence'] for d in x]) if len(x) > 0 else 0
-            )
-            features['max_source_conf'] = df['sources'].apply(
-                lambda x: np.max([d['confidence'] for d in x]) if len(x) > 0 else 0
-            )
-            features['min_source_conf'] = df['sources'].apply(
-                lambda x: np.min([d['confidence'] for d in x]) if len(x) > 0 else 0
-            )
-            features['source_conf_std'] = df['sources'].apply(
-                lambda x: np.std([d['confidence'] for d in x]) if len(x) > 1 else 0
-            )
-            
-            # Source confidence bins
-            features['high_source_conf'] = (features['max_source_conf'] >= 0.90).astype(int)
-            features['low_source_conf'] = (features['max_source_conf'] < 0.70).astype(int)
-            
-            # Interaction with source confidence
-            features['high_conf_with_contacts'] = features['high_source_conf'] * features['contact_diversity']
-        
         self._feature_names = list(features.columns)
         return features
 
     def fit(self, train_df: pd.DataFrame, val_df: pd.DataFrame = None):
-        """Train the model."""
+        """Train the model using two-stage approach."""
         print(f"\n{'='*60}")
-        print(f"Training: {self._get_variant_name()}")
+        print(f"Training: Two-Stage Neural Network (No Confidence)")
         print(f"{'='*60}")
         
-        if self.mode == "two-stage":
-            self._fit_two_stage(train_df, val_df)
-        else:
-            self._fit_single_stage(train_df, val_df)
-        
-        return self
-    
-    def _fit_single_stage(self, train_df: pd.DataFrame, val_df: pd.DataFrame = None):
-        """Train single-stage model on all data."""
-        X_train = self.extract_features(train_df)
-        y_train = train_df['open']
-        
-        print(f"Training on {len(train_df)} samples:")
-        print(f"  Open: {y_train.sum()} ({y_train.mean():.1%})")
-        print(f"  Closed: {(~y_train.astype(bool)).sum()} ({(~y_train.astype(bool)).mean():.1%})")
-        print(f"  Features: {X_train.shape[1]}")
-        
-        self.model = LogisticRegression(
-            class_weight='balanced',
-            random_state=42, 
-            max_iter=1000
-        )
-        self.model.fit(X_train, y_train)
-        print("Model trained.")
-        
-        if val_df is not None:
-            self._print_validation_report(val_df)
-    
-    def _fit_two_stage(self, train_df: pd.DataFrame, val_df: pd.DataFrame = None):
-        """Train two-stage model: filter obvious cases, then train on uncertain."""
         # Stage 1
         obviously_open_mask = self.stage1_filter(train_df)
         
@@ -315,8 +247,9 @@ class UnifiedLogisticRegression:
         print(f"  Uncertain (to classify): {(~obviously_open_mask).sum()} ({(~obviously_open_mask).mean():.1%})")
         
         # Stage 1 accuracy check
-        stage1_correct = train_df[obviously_open_mask]['open'].mean()
-        print(f"  Stage 1 accuracy on 'obviously open': {stage1_correct:.3f}")
+        if obviously_open_mask.sum() > 0:
+            stage1_correct = train_df[obviously_open_mask]['open'].mean()
+            print(f"  Stage 1 accuracy on 'obviously open': {stage1_correct:.3f}")
         print()
         
         # Stage 2 with uncertain cases
@@ -331,20 +264,33 @@ class UnifiedLogisticRegression:
             print(f"  Closed: {(~y_uncertain.astype(bool)).sum()} ({(~y_uncertain.astype(bool)).mean():.1%})")
             print(f"  Features: {X_uncertain.shape[1]}")
             
-            # Balanced class weight to improve closed recall while maintaining reasonable precision
-            # Changed from {0: 3, 1: 1} to 'balanced' for automatic calculation
-            self.model = LogisticRegression(
-                class_weight='balanced',
-                random_state=42, 
-                max_iter=1000
+            # Scale features for neural network
+            X_scaled = self.scaler.fit_transform(X_uncertain)
+            
+            # Train neural network with balanced class weights
+            self.model = MLPClassifier(
+                hidden_layer_sizes=self.hidden_layer_sizes,
+                activation='relu',
+                solver='adam',
+                alpha=0.0001,
+                batch_size='auto',
+                learning_rate='adaptive',
+                learning_rate_init=0.001,
+                max_iter=500,
+                random_state=self.random_state,
+                early_stopping=False,  # Disable early stopping to ensure full training
+                verbose=False
             )
-            self.model.fit(X_uncertain, y_uncertain)
-            print("Stage 2 model trained.")
+            
+            self.model.fit(X_scaled, y_uncertain)
+            print("Stage 2 neural network trained.")
         else:
             print("No uncertain cases to train Stage 2 model on.")
         
         if val_df is not None:
             self._print_validation_report(val_df)
+        
+        return self
     
     def _print_validation_report(self, val_df: pd.DataFrame):
         """Print validation metrics."""
@@ -365,22 +311,10 @@ class UnifiedLogisticRegression:
         print(f"  Accuracy: {acc:.3f}")
 
     def predict(self, df: pd.DataFrame) -> np.ndarray:
-        """Make predictions."""
+        """Make predictions using two-stage approach."""
         if self.model is None:
             raise ValueError("Model not trained yet.")
         
-        if self.mode == "two-stage":
-            return self._predict_two_stage(df)
-        else:
-            return self._predict_single_stage(df)
-    
-    def _predict_single_stage(self, df: pd.DataFrame) -> np.ndarray:
-        """Single-stage prediction."""
-        X = self.extract_features(df)
-        return self.model.predict(X)
-    
-    def _predict_two_stage(self, df: pd.DataFrame) -> np.ndarray:
-        """Two-stage prediction."""
         predictions = np.ones(len(df))
         
         obviously_open_mask = self.stage1_filter(df)
@@ -389,7 +323,10 @@ class UnifiedLogisticRegression:
         uncertain_mask = ~obviously_open_mask
         if uncertain_mask.sum() > 0:
             X_uncertain = self.extract_features(df[uncertain_mask])
-            uncertain_predictions = self.model.predict(X_uncertain)
+            X_scaled = self.scaler.transform(X_uncertain)
+            # Use probability threshold for better control
+            proba = self.model.predict_proba(X_scaled)
+            uncertain_predictions = (proba[:, 1] >= self.decision_threshold).astype(int)
             predictions[uncertain_mask] = uncertain_predictions
         
         return predictions.astype(int)
@@ -399,21 +336,9 @@ class UnifiedLogisticRegression:
         if self.model is None:
             raise ValueError("Model not trained yet.")
         
-        if self.mode == "two-stage":
-            return self._predict_proba_two_stage(df)
-        else:
-            return self._predict_proba_single_stage(df)
-    
-    def _predict_proba_single_stage(self, df: pd.DataFrame) -> np.ndarray:
-        """Single-stage probability prediction."""
-        X = self.extract_features(df)
-        return self.model.predict_proba(X)
-    
-    def _predict_proba_two_stage(self, df: pd.DataFrame) -> np.ndarray:
-        """Two-stage probability prediction."""
         proba = np.ones((len(df), 2))
-        proba[:, 0] = 0
-        proba[:, 1] = 1
+        proba[:, 0] = 0.01
+        proba[:, 1] = 0.99
         
         obviously_open_mask = self.stage1_filter(df)
         proba[obviously_open_mask, 0] = 0.01
@@ -422,22 +347,11 @@ class UnifiedLogisticRegression:
         uncertain_mask = ~obviously_open_mask
         if uncertain_mask.sum() > 0:
             X_uncertain = self.extract_features(df[uncertain_mask])
-            uncertain_proba = self.model.predict_proba(X_uncertain)
+            X_scaled = self.scaler.transform(X_uncertain)
+            uncertain_proba = self.model.predict_proba(X_scaled)
             proba[uncertain_mask] = uncertain_proba
         
         return proba
-
-    def get_feature_importances(self) -> pd.DataFrame:
-        """Get feature importances from the logistic regression coefficients."""
-        if self.model is None:
-            raise ValueError("Model not trained yet.")
-        
-        importances = pd.DataFrame({
-            'feature': self._feature_names,
-            'coefficient': self.model.coef_[0],
-            'abs_coefficient': np.abs(self.model.coef_[0])
-        })
-        return importances.sort_values('abs_coefficient', ascending=False)
 
     def save_model(self, path: str):
         """Save the model to disk."""
@@ -445,8 +359,10 @@ class UnifiedLogisticRegression:
             raise ValueError("Model not trained yet.")
         model_data = {
             'model': self.model,
-            'mode': self.mode,
-            'use_source_confidence': self.use_source_confidence,
+            'scaler': self.scaler,
+            'hidden_layer_sizes': self.hidden_layer_sizes,
+            'random_state': self.random_state,
+            'decision_threshold': self.decision_threshold,
             'feature_names': self._feature_names
         }
         joblib.dump(model_data, path)
@@ -456,13 +372,15 @@ class UnifiedLogisticRegression:
         """Load the model from disk."""
         model_data = joblib.load(path)
         self.model = model_data['model']
-        self.mode = model_data['mode']
-        self.use_source_confidence = model_data['use_source_confidence']
+        self.scaler = model_data['scaler']
+        self.hidden_layer_sizes = model_data['hidden_layer_sizes']
+        self.random_state = model_data['random_state']
+        self.decision_threshold = model_data.get('decision_threshold', 0.5)
         self._feature_names = model_data['feature_names']
         print(f"Model loaded from {path}")
 
 
-def evaluate_model(y_true, y_pred, model_name: str) -> dict:
+def evaluate_model(y_true, y_pred, model_name: str = "Two-Stage Neural Network") -> dict:
     """Evaluate and print model performance."""
     prec_open = precision_score(y_true, y_pred, pos_label=1)
     rec_open = recall_score(y_true, y_pred, pos_label=1)
@@ -489,90 +407,39 @@ def evaluate_model(y_true, y_pred, model_name: str) -> dict:
     }
 
 
-def run_all_variants(train_df, val_df, test_df):
-    """Run all 4 variants and compare results."""
-    variants = [
-        ("single", False, "Single-Stage LR (No Confidence)"),
-        ("single", True, "Single-Stage LR (Source Confidence)"),
-        ("two-stage", False, "Two-Stage LR (No Confidence)"),
-        ("two-stage", True, "Two-Stage LR (Source Confidence)"),
-    ]
-    
-    results = []
-    
-    for mode, use_conf, name in variants:
-        model = UnifiedLogisticRegression(mode=mode, use_source_confidence=use_conf)
-        model.fit(train_df, val_df=None)  # Suppress validation output for comparison
-        
-        predictions = model.predict(test_df)
-        result = evaluate_model(test_df['open'], predictions, name)
-        results.append(result)
-    
-    # Summary table
-    print("\n" + "=" * 90)
-    print("SUMMARY COMPARISON - ALL VARIANTS")
-    print("=" * 90)
-    print(f"{'Model':<40} {'Accuracy':<10} {'Closed Prec':<12} {'Closed Rec':<12} {'Closed F1':<10}")
-    print("-" * 90)
-    
-    for result in results:
-        print(f"{result['model']:<40} {result['accuracy']:<10.3f} {result['closed_precision']:<12.3f} {result['closed_recall']:<12.3f} {result['closed_f1']:<10.3f}")
-    
-    # Find best models
-    print("\n" + "=" * 90)
-    print("KEY INSIGHTS:")
-    print("=" * 90)
-    
-    best_accuracy = max(results, key=lambda x: x['accuracy'])
-    best_closed_precision = max(results, key=lambda x: x['closed_precision'])
-    
-    print(f"Best Accuracy: {best_accuracy['model']} ({best_accuracy['accuracy']:.3f})")
-    print(f"Best Closed Precision: {best_closed_precision['model']} ({best_closed_precision['closed_precision']:.3f})")
-    print(f"\nRecommended for production: {best_closed_precision['model']}")
-    print("(Minimizes false closed predictions - best for traveler use cases)")
-    
-    return results
-
-
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Unified Logistic Regression Model")
-    parser.add_argument("--mode", choices=["single", "two-stage"], default="two-stage",
-                       help="Model mode: single-stage or two-stage")
-    parser.add_argument("--confidence", choices=["none", "source"], default="none",
-                       help="Confidence features: none or source")
-    parser.add_argument("--compare-all", action="store_true",
-                       help="Run all 4 variants and compare")
+    parser = argparse.ArgumentParser(description="Two-Stage Neural Network Model")
+    parser.add_argument("--hidden-layers", type=str, default="100,50",
+                       help="Hidden layer sizes (comma-separated, e.g., '100,50')")
+    parser.add_argument("--threshold", type=float, default=0.7,
+                       help="Decision threshold for open classification (default 0.7 for better closed recall)")
     parser.add_argument("--split", choices=["val", "test"], default="test",
                        help="Evaluation split")
     args = parser.parse_args()
     
+    # Parse hidden layers
+    hidden_layers = tuple(map(int, args.hidden_layers.split(',')))
+    
     # Load data
-    data_dir = os.path.join(os.path.dirname(__file__), '../../data')
+    data_dir = os.path.join(os.path.dirname(__file__), '../../data/project_c_samples')
     train_df = pd.read_parquet(os.path.join(data_dir, 'train_split.parquet'))
     val_df = pd.read_parquet(os.path.join(data_dir, 'val_split.parquet'))
     test_df = pd.read_parquet(os.path.join(data_dir, 'test_split.parquet'))
     
     eval_df = test_df if args.split == "test" else val_df
     
-    if args.compare_all:
-        run_all_variants(train_df, val_df, test_df)
-    else:
-        # Run single variant
-        use_source_conf = args.confidence == "source"
-        model = UnifiedLogisticRegression(mode=args.mode, use_source_confidence=use_source_conf)
-        model.fit(train_df, val_df)
-        
-        # Evaluate on specified split
-        predictions = model.predict(eval_df)
-        evaluate_model(eval_df['open'], predictions, model._get_variant_name())
-        
-        # Show feature importances
-        print("\nTop 10 Feature Importances:")
-        importances = model.get_feature_importances()
-        print(importances.head(10).to_string(index=False))
-        
-        # Save model
-        conf_str = "source_conf" if use_source_conf else "no_conf"
-        model_filename = f"lr_{args.mode.replace('-', '_')}_{conf_str}.pkl"
-        model_path = os.path.join(os.path.dirname(__file__), model_filename)
-        model.save_model(model_path)
+    # Train model
+    model = TwoStageNeuralNetwork(hidden_layer_sizes=hidden_layers)
+    model.fit(train_df, val_df)
+    
+    # Evaluate on test set
+    print("\n" + "="*60)
+    print("TEST SET EVALUATION")
+    print("="*60)
+    
+    predictions = model.predict(eval_df)
+    evaluate_model(eval_df['open'], predictions, "Two-Stage Neural Network (No Confidence)")
+    
+    # Save model
+    model_path = os.path.join(os.path.dirname(__file__), "nn_two_stage_no_conf.pkl")
+    model.save_model(model_path)
