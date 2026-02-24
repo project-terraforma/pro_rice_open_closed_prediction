@@ -5,7 +5,7 @@ This document explains each column in the parquet dataset and how it might help 
 ## Big Picture
 - The parquet file is the **source of truth** for modeling. The online schema is useful context, but the model must follow what is **actually present in the parquet**.
 - `open` is the **label** (target). All other columns are **features** or metadata.
-- `confidence` is **not the label**. It is an existence confidence signal (how sure the system is that the place exists).
+- `confidence` is **not the label**. It is a provider-side confidence signal and can be constant for some providers.
 - `sources` provides provenance. If a property is not explicitly listed in `sources.property`, its provenance falls back to the **root source** (the entry with `property: ""`) for that record.
 
 ## Columns
@@ -43,8 +43,8 @@ This document explains each column in the parquet dataset and how it might help 
 - `record_id`: source-specific ID
 - `update_time`: source update time
 
-**Why it matters:** More sources, more recent updates, or higher source confidence can indicate an active place.
-**Use for modeling:** **Yes** (features like source count, source confidence, recency, dataset diversity).
+**Why it matters:** More sources and more recent updates can indicate a better-supported, current record.
+**Use for modeling:** **Yes** for source count/recency/diversity. Use per-source confidence only as an experimental feature unless semantics are fully confirmed.
 
 **Important provenance rule:**
 - If a property has an explicit `sources.property`, it is attributed to that source.
@@ -62,9 +62,9 @@ This document explains each column in the parquet dataset and how it might help 
 **Use for modeling:** **Yes** (category features are often strong).
 
 ### `confidence`
-**What it is:** System-level confidence that the place **exists** (0–1).
-**Why it matters:** Lower confidence can correlate with closed or stale records.
-**Use for modeling:** **Yes** (strong signal).
+**What it is:** Provider-side confidence related to finding the place at the location and whether it is in business/open.
+**Why it matters:** It can be predictive, but it may encode provider-specific behavior and is constant for some providers.
+**Use for modeling:** **Not recommended for the core baseline** (per Overture guidance). Keep only as optional/ablation.
 
 **Clarification:** This is **not** "open right now". It is about existence/validity of the place record.
 
@@ -105,19 +105,33 @@ This document explains each column in the parquet dataset and how it might help 
 ## Data Lineage / Snapshot Assumptions
 - The parquet file is likely a **snapshot** of a larger, continuously updated system.
 - `sources.update_time` reflects when sources last updated, not necessarily the snapshot time.
-- The parquet itself does **not** tell you how the label was generated or how the snapshot was created. Confirm with data owners if needed.
+- Open/closed labels were produced in **December 2025** by an external provider using agents/web search and may contain some noise.
+- There is no explicit snapshot timestamp column in the delivered sample.
 
 ## Practical Modeling Takeaways
-- Treat `confidence` as a strong feature, **not** the label.
-- Use `sources` to extract: source count, recency, dataset diversity, and per-source confidence.
+- Keep `confidence` out of the primary baseline unless explicitly approved for use.
+- Use `sources` to extract: source count, recency, and dataset diversity.
 - Use contact/brand presence as lighter‑weight signals.
 - Avoid using identifiers (`id`) directly.
 
-## Questions to Confirm with Data Owners
-- How exactly is the `open` label generated?
-- Is this a snapshot? If so, what date/time?
-- What is the precise meaning of `sources[*].confidence`?
-- Are there known quirks in `sources.property` or provenance merging?
+## Confirmed with Overture Team (Feb 2026)
+- Open/closed labels come from an external provider that uses agents/web search.
+- Label noise is possible (not perfectly clean ground truth).
+- Class imbalance around ~90/10 open/closed is close to production and should be treated as part of the real task.
+- No larger labeled open/closed set is currently available.
+- Upstream provider signals are not currently accessible for this project.
+- From Overture's side, there are currently no constraints on trying external data sources.
+
+## Still Worth Clarifying
+- Exact semantics/calculation of `sources[*].confidence` across providers.
+- Any known edge cases in `sources.property` merging behavior.
+
+## Important Dataset Scope Note
+- `data/matching_validation/samples_3k_project_c_updated.csv` is **not** an open/closed dataset.
+- It is a place-matching validation dataset:
+  - `label = 1` means the pair matches.
+  - `label = 0` means the pair does not match.
+  - `base_*` fields correspond to one side of the pair.
 
 ## Exploration Findings (Training Split Only)
 These findings are from `data/train_split.parquet` and may not represent val/test splits.

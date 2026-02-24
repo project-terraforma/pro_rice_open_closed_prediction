@@ -401,6 +401,57 @@ def evaluate_model(y_true, y_pred, model_name: str) -> dict:
     }
 
 
+def print_stage_breakdown(model: LightGBMModel, eval_df: pd.DataFrame, decision_threshold: float = 0.5):
+    """
+    Compare stage contributions for two-stage models:
+    1) Stage 1 signal only (open if filtered, else closed)
+    2) Stage 2 model over all rows (no stage 1 gate)
+    3) Full two-stage pipeline
+    4) Stage 2 performance on uncertain subset only
+    """
+    if model.mode != "two-stage":
+        print("\nStage breakdown is only available for two-stage mode.")
+        return
+
+    print("\n" + "=" * 60)
+    print("STAGE CONTRIBUTION BREAKDOWN")
+    print("=" * 60)
+
+    y_true = eval_df["open"].values
+    stage1_mask = model.stage1_filter(eval_df)
+    uncertain_mask = ~stage1_mask
+
+    print(f"Stage 1 filtered-open coverage: {stage1_mask.mean():.3f} ({stage1_mask.sum()}/{len(eval_df)})")
+    if stage1_mask.sum() > 0:
+        stage1_open_precision = eval_df.loc[stage1_mask, "open"].mean()
+        leaked_closed = int((eval_df.loc[stage1_mask, "open"] == 0).sum())
+        print(f"Stage 1 precision within filtered-open: {stage1_open_precision:.3f}")
+        print(f"True closed leaked into stage 1 open bucket: {leaked_closed}")
+
+    # 1) Stage 1 signal only: open if filtered, else closed
+    stage1_only_pred = stage1_mask.astype(int).values
+    evaluate_model(y_true, stage1_only_pred, "Stage 1 signal only")
+
+    # 2) Stage 2 model only on all rows (no gate)
+    X_all = model.extract_features(eval_df)
+    stage2_all_prob = model.model.predict_proba(X_all)[:, 1]
+    stage2_all_pred = (stage2_all_prob >= decision_threshold).astype(int)
+    evaluate_model(y_true, stage2_all_pred, "Stage 2 only (no stage 1 gate)")
+
+    # 3) Full two-stage (using thresholded probabilities for parity)
+    full_prob = model.predict_proba(eval_df)[:, 1]
+    full_pred = (full_prob >= decision_threshold).astype(int)
+    evaluate_model(y_true, full_pred, "Full two-stage pipeline")
+
+    # 4) Stage 2 on uncertain subset only
+    if uncertain_mask.sum() > 0:
+        X_uncertain = model.extract_features(eval_df.loc[uncertain_mask])
+        y_uncertain = eval_df.loc[uncertain_mask, "open"].values
+        stage2_uncertain_prob = model.model.predict_proba(X_uncertain)[:, 1]
+        stage2_uncertain_pred = (stage2_uncertain_prob >= decision_threshold).astype(int)
+        evaluate_model(y_uncertain, stage2_uncertain_pred, "Stage 2 on uncertain subset only")
+
+
 def run_param_sweep(train_df: pd.DataFrame, val_df: pd.DataFrame, use_source_confidence: bool, use_interactions: bool) -> None:
     grid = [
         {"n_estimators": 200, "learning_rate": 0.05, "num_leaves": 31, "min_child_samples": 20},
@@ -454,6 +505,8 @@ if __name__ == "__main__":
                        help="scale_pos_weight for LightGBM (overrides class_weight)")
     parser.add_argument("--decision-threshold", type=float, default=0.5,
                        help="Decision threshold for class 1")
+    parser.add_argument("--stage-breakdown", action="store_true",
+                       help="Print stage-1 vs stage-2 contribution breakdown (two-stage only)")
     args = parser.parse_args()
 
     data_dir = os.path.join(os.path.dirname(__file__), "../../data")
@@ -485,6 +538,9 @@ if __name__ == "__main__":
     probs = model.predict_proba(eval_df)[:, 1]
     predictions = (probs >= args.decision_threshold).astype(int)
     evaluate_model(eval_df["open"], predictions, model._get_variant_name())
+
+    if args.stage_breakdown:
+        print_stage_breakdown(model, eval_df, decision_threshold=args.decision_threshold)
 
     print("\nTop 10 Feature Importances:")
     importances = model.get_feature_importances()

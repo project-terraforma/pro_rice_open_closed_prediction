@@ -6,6 +6,8 @@ Note: `data/matching_validation/` contains matching-validation datasets (`label=
 **Class Distribution (Test):** 91% open, 9% closed (severe imbalance)  
 **Objective:** Maximize accuracy while minimizing false closed predictions (users thinking places are closed when they're actually open)
 
+Note: LR validation metrics for no-confidence variants were refreshed from current code on Feb 11, 2026 using `src/models/logistic_regression.py --split val`.
+
 ---
 
 ## Executive Summary - Test Results
@@ -41,9 +43,9 @@ Accuracy: 0.840
 ### Single-Stage LR (No Confidence)
 
 Validation Report:
-Open: Precision: 0.936    Recall: 0.826    F1: 0.878
-Closed: Precision: 0.206    Recall: 0.444    F1: 0.281
-Accuracy: 0.791
+Open: Precision: 0.937    Recall: 0.812    F1: 0.870
+Closed: Precision: 0.199    Recall: 0.460    F1: 0.278
+Accuracy: 0.780
 
 Test Report:
 Open: Precision: 0.941    Recall: 0.824    F1: 0.879
@@ -65,9 +67,9 @@ Accuracy: 0.682
 ### Two-Stage LR (No Confidence)
 
 Validation Report:
-Open: Precision: 0.918    Recall: 0.973    F1: 0.945
-Closed: Precision: 0.346    Recall: 0.143    F1: 0.202
-Accuracy: 0.896
+Open: Precision: 0.936    Recall: 0.847    F1: 0.889
+Closed: Precision: 0.221    Recall: 0.429    F1: 0.292
+Accuracy: 0.809
 
 Test Report:
 Open: Precision: 0.916    Recall: 0.984    F1: 0.949
