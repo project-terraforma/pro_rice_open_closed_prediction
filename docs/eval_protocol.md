@@ -33,6 +33,13 @@ Status: draft for team review.
   - external datasets or APIs
   - web-derived signals outside Overture schema
   - expensive per-place inference pipelines
+  - live URL probing features (e.g., `url_live`, `url_status_code`) that require runtime web requests
+- Team policy exclusions:
+  - Do not use global confidence or source-confidence-derived features for training/evaluation.
+  - For this sample dataset, do not use `emails`-based features (field is fully null in current sample).
+- Special handling for label-derived encodings:
+  - `category_closure_risk` is allowed as a medium-cost schema-native feature.
+  - It must be computed fold-safely (out-of-fold on training data only), with held-out/test rows never used to build the encoding table.
 - Every feature used in experiments must be listed in a feature inventory table with:
   - source field
   - transform
@@ -44,7 +51,7 @@ Status: draft for team review.
   - Logistic Regression
   - Random Forest or constrained GBDT
   - LightGBM (constrained)
-- Optional variants (single-stage, two-stage, with/without source confidence) are allowed, but must follow this protocol.
+- Optional variants (single-stage, two-stage, etc.) are allowed, but must follow this protocol and team feature exclusions.
 
 ## 5) Thresholding and Selection Rule
 - Primary ranking metric (cross-validation): PR-AUC (closed).

@@ -1,0 +1,73 @@
+feature_name,source_field,transform,cost_tier,allowed_under_KR1.2
+address_completeness,addresses,"fraction of filled address subfields across address objects",medium,yes
+addresses_present,addresses,"boolean: addresses list exists and non-empty",low,yes
+brand_with_contacts,"brand,websites,phones,socials","interaction: has_brand * contact_diversity",medium,yes
+category_closure_risk,"categories.primary (+ training labels)","fold-safe target encoding: smoothed closed-rate prior by category",medium,yes
+completeness_score,"websites,phones,socials,addresses,brand,categories,names","sum of availability booleans",low,yes
+conf_high,confidence,"binary bucket: 0.90 <= confidence < 0.95",low,no
+conf_low,confidence,"binary bucket: 0.65 <= confidence < 0.80",low,no
+conf_medium,confidence,"binary bucket: 0.80 <= confidence < 0.90",low,no
+conf_very_high,confidence,"binary bucket: confidence >= 0.95",low,no
+conf_very_low,confidence,"binary bucket: confidence < 0.65",low,no
+contact_diversity,"websites,phones,socials","count of contact channel booleans",low,yes
+fresh,sources.update_time,"boolean recency bin: 90 < recency_days <= 365",low,yes
+geo_h3_cell_id,geometry,"coarse spatial bucket encoding from point geometry (H3/geohash cell)",medium,yes
+geo_cluster_id,geometry,"deterministic spatial cluster assignment (e.g., k-means/geotile cluster id)",medium,yes
+has_addresses,addresses,"boolean: num_addresses > 0",low,yes
+has_alternate_categories,categories.alternate,"boolean: alternate categories present",low,yes
+has_brand,brand,"boolean: brand exists",low,yes
+has_chain_pattern,names.primary,"regex/substring flag for common chain tokens",low,yes
+has_full_contact_info,"websites,phones,socials","boolean: contact_diversity == 3",low,yes
+has_long_name,names.primary,"boolean: name_length > 20",low,yes
+has_many_sources,sources,"boolean: num_sources >= 3",low,yes
+has_multiple_addresses,addresses,"boolean: num_addresses >= 2",low,yes
+has_multiple_datasets,sources.dataset,"boolean: distinct datasets >= 2",medium,yes
+has_multiple_phones,phones,"boolean: num_phones >= 2",low,yes
+has_multiple_socials,socials,"boolean: num_socials >= 2",low,yes
+has_multiple_sources,sources,"boolean: num_sources >= 2",low,yes
+has_multiple_websites,websites,"boolean: num_websites >= 2",low,yes
+has_name,names.primary,"boolean: primary name exists",low,yes
+has_phones,phones,"boolean: phone list exists and non-empty",low,yes
+has_primary_category,categories.primary,"boolean: primary category exists",low,yes
+has_short_name,names.primary,"boolean: name_length <= 5",low,yes
+has_socials,socials,"boolean: social list exists and non-empty",low,yes
+has_websites,websites,"boolean: website list exists and non-empty",low,yes
+high_conf_with_contacts,"sources.confidence,websites,phones,socials","interaction: high_source_conf * contact_diversity",medium,no
+high_source_conf,sources.confidence,"boolean: max_source_conf >= 0.90",medium,no
+low_source_conf,sources.confidence,"boolean: max_source_conf < 0.70",medium,no
+max_source_conf,sources.confidence,"max confidence across source records",medium,no
+max_update_time,sources.update_time,"latest source update timestamp",low,yes
+mean_source_conf,sources.confidence,"mean confidence across source records",medium,no
+min_source_conf,sources.confidence,"min confidence across source records",medium,no
+multi_dataset_with_contacts,"sources.dataset,websites,phones,socials","interaction: has_multiple_datasets * contact_diversity",medium,yes
+multiple_sources_with_contacts,"sources,websites,phones,socials","interaction: has_multiple_sources * contact_diversity",medium,yes
+name_length,names.primary,"character length of primary name",low,yes
+neighbor_closed_rate,"geometry (+ training labels)","fold-safe local target encoding: closed-rate among neighbors within fixed radius",medium,yes
+ohe_geo_cluster__*,geo_cluster_id,"one-hot encoding over selected spatial cluster vocabulary",medium,yes
+num_addresses,addresses,"count of addresses",low,yes
+num_categories,"categories.primary,categories.alternate","count of primary+alternate categories",low,yes
+num_datasets,sources.dataset,"count of distinct source datasets",medium,yes
+num_phones,phones,"count of phones",low,yes
+num_socials,socials,"count of socials",low,yes
+num_sources,sources,"count of source records",low,yes
+num_websites,websites,"count of websites",low,yes
+ohe_primary_category__*,categories.primary,"one-hot encoding over selected primary-category vocabulary",medium,yes
+ohe_source_dataset__*,sources.dataset,"one-hot encoding over selected source-dataset vocabulary",medium,yes
+overall_confidence,confidence,"raw record-level confidence",low,no
+phones_present,phones,"boolean: phones list exists and non-empty",low,yes
+recent_with_contacts,"sources.update_time,websites,phones,socials","interaction: very_fresh * contact_diversity",medium,yes
+recency_days,sources.update_time,"days from latest snapshot_time to max_update_time",low,yes
+rich_profile,"websites,phones,socials,addresses,brand,categories,names","boolean: completeness_score >= 5",low,yes
+same_category_neighbor_closed_rate,"geometry,categories.primary (+ training labels)","fold-safe local target encoding: closed-rate among nearby places with same primary category",medium,yes
+spatial_cluster_closed_rate,"geo_cluster_id (+ training labels)","fold-safe target encoding: smoothed closed-rate prior by spatial cluster",medium,yes
+single_source,sources,"boolean: num_sources == 1",low,yes
+single_source_no_socials,"sources,socials","interaction: single_source * (1-has_socials)",medium,yes
+socials_present,socials,"boolean: socials list exists and non-empty",low,yes
+spatial_local_density,geometry,"count of nearby places within fixed radius (or within same H3/geohash cell)",medium,yes
+source_conf_std,sources.confidence,"stddev of confidence across source records",medium,no
+source_temporal_diversity,sources.update_time,"stddev of source update-time offsets",medium,yes
+sources_n,sources,"count of source records (rules baseline alias)",low,yes
+stale,sources.update_time,"boolean recency bin: recency_days > 730 (or >=1500 in RF variant)",low,yes
+very_fresh,sources.update_time,"boolean recency bin: recency_days <= 90 (or <=180 in RF variant)",low,yes
+very_stale,sources.update_time,"boolean recency bin: recency_days > 1825",low,yes
+websites_present,websites,"boolean: websites list exists and non-empty",low,yes

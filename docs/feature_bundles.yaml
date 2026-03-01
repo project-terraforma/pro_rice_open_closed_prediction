@@ -1,0 +1,172 @@
+version: 1
+notes:
+  - "Bundle definitions are fixed for OKR tracking and must be referenced in experiment configs."
+  - "All listed features are schema-native and KR1.2-allowed."
+  - "Confidence-derived features are excluded by team policy (global and source confidence)."
+  - "low_plus_medium is the canonical comparison bundle for apples-to-apples model evaluation."
+  - "full_schema_native is the policy-compliant superset for experiments (includes proposed features, excludes confidence-derived features)."
+  - "Do not change bundle contents within an experiment round; update bundles only between rounds after ablation review."
+  - "When bundle contents change, increment version and record rationale in experiment notes."
+
+bundles:
+  low_only:
+    description: "Low-cost schema-native features only (counts, booleans, simple bins, simple regex)."
+    features:
+      - addresses_present
+      - completeness_score
+      - contact_diversity
+      - fresh
+      - has_addresses
+      - has_alternate_categories
+      - has_brand
+      - has_chain_pattern
+      - has_full_contact_info
+      - has_long_name
+      - has_many_sources
+      - has_multiple_addresses
+      - has_multiple_phones
+      - has_multiple_socials
+      - has_multiple_sources
+      - has_multiple_websites
+      - has_name
+      - has_phones
+      - has_primary_category
+      - has_short_name
+      - has_socials
+      - has_websites
+      - max_update_time
+      - name_length
+      - num_addresses
+      - num_categories
+      - num_phones
+      - num_socials
+      - num_sources
+      - num_websites
+      - phones_present
+      - recency_days
+      - rich_profile
+      - single_source
+      - socials_present
+      - sources_n
+      - stale
+      - very_fresh
+      - very_stale
+      - websites_present
+
+  low_plus_medium:
+    description: "Canonical comparison bundle: low_only plus medium-cost schema-native aggregations/interactions."
+    features:
+      - addresses_present
+      - address_completeness
+      - brand_with_contacts
+      - category_closure_risk
+      - completeness_score
+      - contact_diversity
+      - fresh
+      - geo_cluster_id
+      - has_addresses
+      - has_alternate_categories
+      - has_brand
+      - has_chain_pattern
+      - has_full_contact_info
+      - has_long_name
+      - has_many_sources
+      - has_multiple_addresses
+      - has_multiple_datasets
+      - has_multiple_phones
+      - has_multiple_socials
+      - has_multiple_sources
+      - has_multiple_websites
+      - has_name
+      - has_phones
+      - has_primary_category
+      - has_short_name
+      - has_socials
+      - has_websites
+      - max_update_time
+      - multi_dataset_with_contacts
+      - multiple_sources_with_contacts
+      - name_length
+      - ohe_geo_cluster__*
+      - ohe_primary_category__*
+      - ohe_source_dataset__*
+      - num_addresses
+      - num_categories
+      - num_datasets
+      - num_phones
+      - num_socials
+      - num_sources
+      - num_websites
+      - phones_present
+      - recent_with_contacts
+      - recency_days
+      - rich_profile
+      - single_source
+      - single_source_no_socials
+      - socials_present
+      - spatial_cluster_closed_rate
+      - source_temporal_diversity
+      - sources_n
+      - stale
+      - very_fresh
+      - very_stale
+      - websites_present
+
+  full_schema_native:
+    description: "Full policy-compliant schema-native superset for experiments."
+    features:
+      - addresses_present
+      - address_completeness
+      - brand_with_contacts
+      - category_closure_risk
+      - completeness_score
+      - contact_diversity
+      - fresh
+      - geo_cluster_id
+      - has_addresses
+      - has_alternate_categories
+      - has_brand
+      - has_chain_pattern
+      - has_full_contact_info
+      - has_long_name
+      - has_many_sources
+      - has_multiple_addresses
+      - has_multiple_datasets
+      - has_multiple_phones
+      - has_multiple_socials
+      - has_multiple_sources
+      - has_multiple_websites
+      - has_name
+      - has_phones
+      - has_primary_category
+      - has_short_name
+      - has_socials
+      - has_websites
+      - max_update_time
+      - multi_dataset_with_contacts
+      - multiple_sources_with_contacts
+      - name_length
+      - ohe_geo_cluster__*
+      - ohe_primary_category__*
+      - ohe_source_dataset__*
+      - num_addresses
+      - num_categories
+      - num_datasets
+      - num_phones
+      - num_socials
+      - num_sources
+      - num_websites
+      - phones_present
+      - recent_with_contacts
+      - recency_days
+      - rich_profile
+      - single_source
+      - single_source_no_socials
+      - socials_present
+      - spatial_cluster_closed_rate
+      - source_temporal_diversity
+      - sources_n
+      - stale
+      - very_fresh
+      - very_stale
+      - websites_present
