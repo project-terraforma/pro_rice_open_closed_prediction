@@ -47,7 +47,7 @@ This document explains why each feature in `docs/feature_inventory.csv` exists.
 - `has_short_name`: Thresholded lexical pattern signal.
 - `has_long_name`: Thresholded lexical pattern signal.
 - `ohe_primary_category__*`: Explicit categorical identity signal for category-specific risk patterns.
-- `category_closure_risk`: Fold-safe category-level closure prior to capture broad category risk differences.
+- `category_closure_risk`: Fold-safe category-level closure rate to capture broad category risk differences.
 
 ## Temporal freshness and consistency
 - `max_update_time`: Most recent source update timestamp; basis for recency features.
