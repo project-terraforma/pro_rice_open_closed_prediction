@@ -1,5 +1,16 @@
 # Model Results: Open/Closed Place Prediction
 
+## Status
+
+This document is **legacy/outdated** and reflects older single-split workflows.
+
+Use these as the current source of truth instead:
+- [CV results summary](./cv_results_summary.md)
+- [Feature importance results](./feature_importance_results.md)
+- [Evaluation protocol](./eval_protocol.md)
+
+Current project decisions should be based on repeated CV outputs and the evaluation contract above, not the historical tables below.
+
 Note: `data/matching_validation/` contains matching-validation datasets (`label=match/no-match`) and is excluded from all open/closed results below.
 
 **Dataset:** 2,397 training samples, 685 validation samples, 343 test samples  
@@ -12,17 +23,16 @@ Note: LR validation metrics for no-confidence variants were refreshed from curre
 
 ## Executive Summary - Test Results
 
-| Model | Accuracy | Open Precision | Open Recall | Closed Precision | Closed Recall |
-|-------|----------|-----------------|-------------|------------------|---------------|
-| **Rules-Only Baseline** | 0.840 | 0.930 | 0.891 | 0.227 | 0.323 |
-| **Single-Stage LR (No Confidence)** | 0.793 | 0.941 | 0.824 | 0.214 | 0.484 |
-| **Single-Stage LR (Source Confidence)** | 0.682 | 0.943 | 0.692 | 0.158 | 0.581 |
-| **Two-Stage LR (No Confidence)** | 0.904 | 0.916 | 0.984 | 0.375 | 0.097 |
-| **Two-Stage LR (Source Confidence)** | 0.898 | 0.924 | 0.968 | 0.375 | 0.194 |
-| **Random Forest** | 0.837 | 0.935 | 0.881 | 0.245 | 0.387 |
-| **Two-Stage LightGBM (No Confidence)** | 0.895 | 0.921 | 0.968 | 0.333 | 0.161 |
-
-| **Less Conservative Two-Stage LR (No Confidence)** | 0.857 | 0.934 | 0.907 | 0.275 | 0.355 |
+| Model                                         | Accuracy | Open Precision | Open Recall | Closed Precision | Closed Recall |
+|-----------------------------------------------|---------:|---------------:|------------:|-----------------:|--------------:|
+| **Rules-Only Baseline**                       |    0.840 |          0.930 |       0.891 |            0.227 |         0.323 |
+| **Single-Stage LR (No Confidence)**           |    0.793 |          0.941 |       0.824 |            0.214 |         0.484 |
+| **Single-Stage LR (Source Confidence)**       |    0.682 |          0.943 |       0.692 |            0.158 |         0.581 |
+| **Two-Stage LR (No Confidence)**              |    0.904 |          0.916 |       0.984 |            0.375 |         0.097 |
+| **Two-Stage LR (Source Confidence)**          |    0.898 |          0.924 |       0.968 |            0.375 |         0.194 |
+| **Random Forest**                             |    0.837 |          0.935 |       0.881 |            0.245 |         0.387 |
+| **Two-Stage LightGBM (No Confidence)**        |    0.895 |          0.921 |       0.968 |            0.333 |         0.161 |
+| **Less Conservative Two-Stage LR (No Confidence)** | 0.857 |          0.934 |       0.907 |            0.275 |         0.355 |
 
 ---
 

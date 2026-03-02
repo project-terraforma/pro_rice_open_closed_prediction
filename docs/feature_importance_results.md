@@ -33,8 +33,8 @@ Note: RF currently supports single-stage only.
 
 ### Logistic Regression (single-stage)
 
-| Rank | Feature | Normalized Importance |
-|---|---|---:|
+| Rank | Feature                                           | Normalized Importance |
+|-----:|---------------------------------------------------|----------------------:|
 | 1 | `spatial_cluster_closed_rate` | 0.0792 |
 | 2 | `category_closure_risk` | 0.0575 |
 | 3 | `address_completeness` | 0.0483 |
@@ -48,8 +48,8 @@ Note: RF currently supports single-stage only.
 
 ### Logistic Regression (two-stage)
 
-| Rank | Feature | Normalized Importance |
-|---|---|---:|
+| Rank | Feature                                           | Normalized Importance |
+|-----:|---------------------------------------------------|----------------------:|
 | 1 | `spatial_cluster_closed_rate` | 0.0952 |
 | 2 | `category_closure_risk` | 0.0722 |
 | 3 | `address_completeness` | 0.0684 |
@@ -63,8 +63,8 @@ Note: RF currently supports single-stage only.
 
 ### LightGBM (single-stage)
 
-| Rank | Feature | Normalized Importance |
-|---|---|---:|
+| Rank | Feature                                           | Normalized Importance |
+|-----:|---------------------------------------------------|----------------------:|
 | 1 | `category_closure_risk` | 0.2118 |
 | 2 | `geo_cluster_id` | 0.1735 |
 | 3 | `name_length` | 0.1721 |
@@ -78,8 +78,8 @@ Note: RF currently supports single-stage only.
 
 ### LightGBM (two-stage)
 
-| Rank | Feature | Normalized Importance |
-|---|---|---:|
+| Rank | Feature                                           | Normalized Importance |
+|-----:|---------------------------------------------------|----------------------:|
 | 1 | `category_closure_risk` | 0.2243 |
 | 2 | `geo_cluster_id` | 0.1746 |
 | 3 | `name_length` | 0.1697 |
@@ -93,8 +93,8 @@ Note: RF currently supports single-stage only.
 
 ### Random Forest (single-stage)
 
-| Rank | Feature | Normalized Importance |
-|---|---|---:|
+| Rank | Feature                                           | Normalized Importance |
+|-----:|---------------------------------------------------|----------------------:|
 | 1 | `spatial_cluster_closed_rate` | 0.4930 |
 | 2 | `category_closure_risk` | 0.1437 |
 | 3 | `name_length` | 0.0391 |
@@ -108,8 +108,8 @@ Note: RF currently supports single-stage only.
 
 ### XGBoost (single-stage)
 
-| Rank | Feature | Normalized Importance |
-|---|---|---:|
+| Rank | Feature                                           | Normalized Importance |
+|-----:|---------------------------------------------------|----------------------:|
 | 1 | `spatial_cluster_closed_rate` | 0.1987 |
 | 2 | `num_datasets` | 0.0869 |
 | 3 | `address_completeness` | 0.0627 |
@@ -123,8 +123,8 @@ Note: RF currently supports single-stage only.
 
 ### XGBoost (two-stage)
 
-| Rank | Feature | Normalized Importance |
-|---|---|---:|
+| Rank | Feature                                           | Normalized Importance |
+|-----:|---------------------------------------------------|----------------------:|
 | 1 | `spatial_cluster_closed_rate` | 0.2249 |
 | 2 | `address_completeness` | 0.0741 |
 | 3 | `socials_present` | 0.0734 |
