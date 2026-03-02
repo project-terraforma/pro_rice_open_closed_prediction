@@ -94,3 +94,83 @@ This document explains why each feature in `docs/feature_inventory.csv` exists.
 - `geo_cluster_id`: Tunable spatial clustering feature to capture local context with controlled dimensionality.
 - `ohe_geo_cluster__*`: Explicit cluster identity signal without city-level one-hot explosion.
 - `spatial_cluster_closed_rate`: Fold-safe cluster-level closure prior capturing local area risk patterns.
+
+## How It Is Calculated (Current `shared_featurizer.py`)
+Notes:
+- `primary_category` is extracted from `categories.primary` (fallback `UNKNOWN`).
+- Label-derived priors are smoothed with: `(sum_closed + m * global_closed_rate) / (count + m)`, where `m = target_smoothing`.
+- One-hot vocabularies are learned from training data (`top_k`) and reused for val/test in the same run.
+
+### Presence / Count Features
+- `websites_present`, `has_websites`: `1` if `websites` exists and `len(websites) > 0`, else `0`.
+- `phones_present`, `has_phones`: `1` if `phones` exists and `len(phones) > 0`, else `0`.
+- `socials_present`, `has_socials`: `1` if `socials` exists and `len(socials) > 0`, else `0`.
+- `addresses_present`, `has_addresses`: `1` if `addresses` exists and `len(addresses) > 0`, else `0`.
+- `num_websites`, `num_phones`, `num_socials`, `num_addresses`, `num_sources`, `sources_n`: direct list length.
+- `has_multiple_websites`, `has_multiple_phones`, `has_multiple_socials`, `has_multiple_addresses`, `has_multiple_sources`: thresholded count (`>= 2`).
+- `has_many_sources`: `num_sources >= 3`.
+- `single_source`: `num_sources == 1`.
+
+### Category / Name / Brand
+- `has_primary_category`: `1` if `categories.primary` exists.
+- `has_alternate_categories`: `1` if `categories.alternate` exists and non-empty.
+- `num_categories`: `1` for primary if present + `len(alternate)` if present.
+- `has_brand`: `1` if `brand` exists.
+- `has_name`: `1` if `names.primary` exists.
+- `name_length`: `len(names.primary)` or `0`.
+- `has_short_name`: `name_length <= 5`.
+- `has_long_name`: `name_length > 20`.
+- `has_chain_pattern`: `1` if lowercased `names.primary` contains any chain keyword from static list.
+
+### Address Completeness
+- `address_completeness`: for each address dict, check fields `[country, region, locality, postcode, address]`; return `filled_fields / total_fields` across all addresses.
+
+### Source Diversity / Dataset Features
+- `num_datasets`: number of distinct `sources.dataset` values.
+- `has_multiple_datasets`: `num_datasets >= 2`.
+- `ohe_source_dataset__*`: learned top-K dataset vocab; feature is `1` if dataset appears in row’s source list.
+
+### Recency / Temporal
+- `max_update_time`: max parseable `sources.update_time`.
+- `recency_days`: `(snapshot_time - max_update_time).days`, where `snapshot_time` is max `max_update_time` in the transformed frame.
+- `very_fresh`: `recency_days <= 90`.
+- `fresh`: `90 < recency_days <= 365`.
+- `stale`: `recency_days > 730`.
+- `very_stale`: `recency_days > 1825`.
+- `source_temporal_diversity`: stddev of per-source day offsets from first source timestamp.
+
+### Composite / Interaction
+- `contact_diversity`: `has_websites + has_phones + has_socials`.
+- `has_full_contact_info`: `contact_diversity == 3`.
+- `completeness_score`: sum of `[has_websites, has_phones, has_socials, has_addresses, has_brand, has_primary_category, has_name]`.
+- `rich_profile`: `completeness_score >= 5`.
+- `brand_with_contacts`: `has_brand * contact_diversity`.
+- `recent_with_contacts`: `very_fresh * contact_diversity`.
+- `multiple_sources_with_contacts`: `has_multiple_sources * contact_diversity`.
+- `multi_dataset_with_contacts`: `has_multiple_datasets * contact_diversity`.
+- `single_source_no_socials`: `single_source * (1 - has_socials)`.
+
+### Category Priors / One-Hot
+- `ohe_primary_category__*`: learned top-K primary-category vocab; one-hot flags.
+- `category_closure_risk`: smoothed closed-rate prior by `primary_category` from training fit; unseen categories use global closed rate.
+
+### Geometry / Spatial
+- `geo_h3_cell_id`: coarse ID built from rounded lat/lon string (`H3_{lat}_{lon}`) after WKB point parsing.
+- `geo_cluster_id`: coarse spatial cluster ID built from rounded lat/lon bins (`CL_{lat_bin}_{lon_bin}`).
+- `ohe_geo_cluster__*`: learned top-K cluster vocab; one-hot flags.
+- `spatial_local_density`: count of rows sharing same `geo_cluster_id` in transformed frame.
+- `spatial_cluster_closed_rate`: smoothed closed-rate prior by `geo_cluster_id` from training fit.
+- `neighbor_closed_rate`: currently set as `spatial_cluster_closed_rate` proxy.
+- `same_category_neighbor_closed_rate`: smoothed closed-rate prior by `(primary_category, geo_cluster_id)` key; fallback to `spatial_cluster_closed_rate`.
+
+### Confidence-Derived (Excluded by Policy)
+- `mean_source_conf`, `max_source_conf`, `min_source_conf`, `source_conf_std`: aggregates over `sources[*].confidence`.
+- `high_source_conf`: `max_source_conf >= 0.90`.
+- `low_source_conf`: `max_source_conf < 0.70`.
+- `high_conf_with_contacts`: `high_source_conf * contact_diversity`.
+- `overall_confidence`: raw `confidence` field.
+- `conf_very_high`: `confidence >= 0.95`.
+- `conf_high`: `0.90 <= confidence < 0.95`.
+- `conf_medium`: `0.80 <= confidence < 0.90`.
+- `conf_low`: `0.65 <= confidence < 0.80`.
+- `conf_very_low`: `confidence < 0.65`.

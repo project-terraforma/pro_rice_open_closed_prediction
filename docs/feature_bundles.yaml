@@ -7,6 +7,8 @@ notes:
   - "full_schema_native is the policy-compliant superset for experiments (includes proposed features, excludes confidence-derived features)."
   - "Do not change bundle contents within an experiment round; update bundles only between rounds after ablation review."
   - "When bundle contents change, increment version and record rationale in experiment notes."
+  - "For fairness, compare model families on the canonical bundle (`low_plus_medium`) first."
+  - "Also report per-model best bundle as sensitivity analysis before final model+bundle selection."
 
 bundles:
   low_only:

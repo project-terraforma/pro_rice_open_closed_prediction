@@ -86,6 +86,36 @@ Status: draft for team review.
       - simpler pipeline
   - Step 4 final deterministic tie-break (if still tied): choose the simplest model family.
 
+### Hyperparameter Optimization Policy
+- After framework lock (shared features, shared metrics, fixed split policy), automated hyperparameter optimization is allowed.
+- Acceptable approaches include Grid Search, Randomized Search, or Optuna-style search.
+- Hyperparameter search must use the same CV protocol, primary metric (PR-AUC closed), and guardrail floors defined in this document.
+- No test-set results may be used for hyperparameter selection.
+
+### Cross-Model vs Per-Model Ceiling Views
+- We report two complementary evaluation views:
+  - Cross-model fair comparison: compare model families under the same feature bundle and the same featurizer settings (including top-K vocab/cluster settings).
+  - Per-model ceiling: allow model-specific bundle and featurizer-setting changes to estimate each model family’s best achievable performance.
+- Hyperparameter tuning is allowed in both views, but must follow the same CV protocol, primary metric, and guardrail rules.
+- Reporting must clearly separate these views so fair-comparison conclusions are not mixed with per-model optimized results.
+
+### Recommended Execution Order
+- Step 1: Lock policy gate logic and decision-rule definitions.
+  - Use the same stage-1 gate logic across all two-stage model families.
+  - Freeze primary metric and guardrail floors before tuning.
+- Step 2: Tune shared featurizer `top_k` controls (category/source/cluster vocab sizes) under fixed CV protocol.
+  - Keep these settings identical across model families for fair cross-model comparison.
+- Step 3: Tune decision thresholds per model using CV predictions.
+  - Optimize thresholded closed F1 subject to guardrails (for example, closed-precision and accuracy floors).
+- Step 4: Run fair cross-model comparison.
+  - Same data splits, same feature bundle, same gate policy, same shared featurizer settings.
+- Step 5: Run per-model ceiling optimization.
+  - After fair comparison is documented, allow model-specific feature/bundle settings and automated hyperparameter optimization.
+  - Keep CV protocol, primary metric, and guardrails unchanged.
+- Step 6: Finalize recommendation and hold out test evaluation.
+  - Apply final rule from Section 6 to choose one configuration.
+  - Evaluate test set once for the selected configuration only.
+
 ### Rationale for Decision Rule
 - Closed performance remains the primary objective, so model ranking is anchored to CV PR-AUC(closed).
 - Small PR-AUC differences can be within split noise, so a top-band approach prevents over-optimizing to negligible deltas.
