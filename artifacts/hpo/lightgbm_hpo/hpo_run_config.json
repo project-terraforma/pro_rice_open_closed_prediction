@@ -1,6 +1,6 @@
 {
   "models": [
-    "lr"
+    "lightgbm"
   ],
   "modes": [
     "single",
