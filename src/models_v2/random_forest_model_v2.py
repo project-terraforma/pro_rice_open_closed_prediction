@@ -16,9 +16,10 @@ except ImportError:  # pragma: no cover - package import fallback
     from .shared_featurizer import SharedPlaceFeaturizer
 
 class RandomForestModel:
-    def __init__(self, feature_bundle: str = "low_plus_medium"):
+    def __init__(self, feature_bundle: str = "low_plus_medium", model_params: dict | None = None):
         self.model = None
         self._feature_names = None
+        self.model_params = dict(model_params or {})
         self.featurizer = SharedPlaceFeaturizer(
             feature_bundle=feature_bundle,
             use_source_confidence=False,
@@ -34,12 +35,14 @@ class RandomForestModel:
         X_train = self.extract_features(train_df)
         y_train = train_df['open']
         
-        self.model = RandomForestClassifier(
-            n_estimators=100,
-            class_weight='balanced',
-            random_state=42,
-            max_depth=10
-        )
+        params = {
+            "n_estimators": 100,
+            "class_weight": "balanced",
+            "random_state": 42,
+            "max_depth": 10,
+        }
+        params.update(self.model_params)
+        self.model = RandomForestClassifier(**params)
         self.model.fit(X_train, y_train)
         
         if val_df is not None:

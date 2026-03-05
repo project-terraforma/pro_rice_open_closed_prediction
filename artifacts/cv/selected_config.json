@@ -1,0 +1,21 @@
+{
+  "selected": {
+    "model_family": "LogisticRegression",
+    "model_key": "lr",
+    "mode": "two-stage",
+    "feature_bundle": "low_plus_medium",
+    "decision_threshold": 0.5,
+    "accuracy_mean": 0.6820309485220345,
+    "closed_precision_mean": 0.1456091253805453,
+    "closed_recall_mean": 0.5048036758563075,
+    "closed_f1_mean": 0.22581637821483566,
+    "pr_auc_closed_mean": 0.13043865035945387,
+    "passes_policy_gates": false
+  },
+  "policy": {
+    "accuracy_floor": 0.85,
+    "closed_precision_floor": 0.3,
+    "pr_auc_top_band": 0.01
+  },
+  "selection_rationale": "No config passed policy floors; selected fallback with max closed-F1 (precision-floor shortfall documented)."
+}

@@ -1,0 +1,3 @@
+model_key,mode,feature_bundle,selected_trial,params_json,selection_rationale,accuracy_mean,closed_precision_mean,closed_recall_mean,closed_f1_mean,pr_auc_closed_mean
+lr,single,low_plus_medium,1,"{""C"": 3.5879974986691985, ""class_weight"": ""balanced"", ""max_iter"": 2000, ""solver"": ""lbfgs""}",No trial passed gates; fallback to max closed-F1.,0.7105650674335106,0.1629830192601214,0.5177304964539007,0.24731117113223144,0.1516760512825674
+lr,two-stage,low_plus_medium,1,"{""C"": 16.617230619519496, ""class_weight"": ""balanced"", ""max_iter"": 1000, ""solver"": ""lbfgs""}",No trial passed gates; fallback to max closed-F1.,0.7154238289907896,0.15561654236623926,0.4609929078014184,0.23072334487076843,0.15299756440317455

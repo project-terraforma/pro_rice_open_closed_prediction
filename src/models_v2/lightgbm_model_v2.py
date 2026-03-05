@@ -33,6 +33,7 @@ class LightGBMModel:
         use_source_confidence: bool = False,
         use_interactions: bool = True,
         feature_bundle: str = "low_plus_medium",
+        model_params: dict | None = None,
     ):
         if mode not in ("single", "two-stage"):
             raise ValueError("mode must be 'single' or 'two-stage'")
@@ -40,6 +41,7 @@ class LightGBMModel:
         self.use_source_confidence = use_source_confidence
         self.use_interactions = use_interactions
         self.feature_bundle = feature_bundle
+        self.model_params = dict(model_params or {})
         self.model = None
         self._feature_names = None
         self.featurizer = SharedPlaceFeaturizer(
@@ -75,17 +77,19 @@ class LightGBMModel:
         return features
 
     def _init_model(self, scale_pos_weight: float | None = None) -> LGBMClassifier:
-        return LGBMClassifier(
-            n_estimators=300,
-            learning_rate=0.05,
-            num_leaves=31,
-            subsample=0.8,
-            colsample_bytree=0.8,
-            min_child_samples=20,
-            random_state=42,
-            class_weight=None if scale_pos_weight is not None else "balanced",
-            scale_pos_weight=scale_pos_weight,
-        )
+        params = {
+            "n_estimators": 300,
+            "learning_rate": 0.05,
+            "num_leaves": 31,
+            "subsample": 0.8,
+            "colsample_bytree": 0.8,
+            "min_child_samples": 20,
+            "random_state": 42,
+            "class_weight": None if scale_pos_weight is not None else "balanced",
+            "scale_pos_weight": scale_pos_weight,
+        }
+        params.update(self.model_params)
+        return LGBMClassifier(**params)
 
     def fit(self, train_df: pd.DataFrame, val_df: pd.DataFrame = None):
         print(f"\n{'='*60}")

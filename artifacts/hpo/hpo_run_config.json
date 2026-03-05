@@ -1,0 +1,24 @@
+{
+  "models": [
+    "lr"
+  ],
+  "modes": [
+    "single",
+    "two-stage"
+  ],
+  "feature_bundle": "low_plus_medium",
+  "n_trials": 3,
+  "search_cv": {
+    "n_splits": 3,
+    "n_repeats": 1
+  },
+  "confirm_cv": {
+    "n_splits": 3,
+    "n_repeats": 1
+  },
+  "decision_threshold": 0.5,
+  "accuracy_floor": 0.85,
+  "closed_precision_floor": 0.3,
+  "pr_auc_top_band": 0.01,
+  "random_state": 42
+}

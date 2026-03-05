@@ -30,6 +30,7 @@ class XGBoostModel:
         mode: str = "single",
         feature_bundle: str = "low_plus_medium",
         use_interactions: bool = True,
+        model_params: dict | None = None,
     ):
         if mode not in ("single", "two-stage"):
             raise ValueError("mode must be 'single' or 'two-stage'")
@@ -37,6 +38,7 @@ class XGBoostModel:
         self.mode = mode
         self.feature_bundle = feature_bundle
         self.use_interactions = use_interactions
+        self.model_params = dict(model_params or {})
         self.model = None
         self._feature_names = None
         self.featurizer = SharedPlaceFeaturizer(
@@ -86,6 +88,7 @@ class XGBoostModel:
         }
         if scale_pos_weight is not None:
             params["scale_pos_weight"] = scale_pos_weight
+        params.update(self.model_params)
         params.update(overrides)
         return XGBClassifier(**params)
 

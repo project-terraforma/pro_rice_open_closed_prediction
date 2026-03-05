@@ -92,6 +92,28 @@ Status: draft for team review.
 - Hyperparameter search must use the same CV protocol, primary metric (PR-AUC closed), and guardrail floors defined in this document.
 - No test-set results may be used for hyperparameter selection.
 
+### Hyperparameter Search Budget (Default)
+- Tune model families separately (LR, LightGBM, RF, XGBoost), not in a single mixed search.
+- Default search budget per model family:
+  - `n_trials = 40` (starting budget for laptop-scale runs)
+  - search CV: `5 folds x 1 repeat` for speed
+  - confirmation CV on shortlisted configs: `5 folds x 3 repeats`
+- Keep the following fixed across model families during fair-comparison HPO:
+  - feature bundle
+  - stage-1 gate policy (for two-stage variants)
+  - random-seed policy
+- Report compute budget in each run artifact (`n_trials`, CV config, runtime).
+
+### Gate-Feasibility Handling During Tuning
+- If zero configurations pass policy gates in a baseline run:
+  - continue tuning under the same official gates,
+  - use fallback selection (max closed F1 with shortfall explicitly documented), and
+  - track best gate-distance (how far closed precision/accuracy are below floors).
+- Optional exploratory mode is allowed for diagnosis only:
+  - temporarily relax floors to estimate feasibility envelopes,
+  - but label these runs as exploratory and do not use them for final selection claims.
+- Final reported recommendation must always be evaluated against the official policy floors.
+
 ### Cross-Model vs Per-Model Ceiling Views
 - We report two complementary evaluation views:
   - Cross-model fair comparison: compare model families under the same feature bundle and the same featurizer settings (including top-K vocab/cluster settings).

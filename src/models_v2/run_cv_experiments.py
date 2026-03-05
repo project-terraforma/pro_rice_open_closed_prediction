@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 from dataclasses import dataclass
+import json
 from pathlib import Path
 from typing import Callable
 
@@ -177,6 +178,51 @@ def summarize_metrics(cv_metrics: pd.DataFrame) -> pd.DataFrame:
     return summary
 
 
+def apply_policy_gates(
+    summary: pd.DataFrame,
+    accuracy_floor: float,
+    closed_precision_floor: float,
+) -> pd.DataFrame:
+    gated = summary.copy()
+    gated["passes_accuracy_floor"] = gated["accuracy_mean"] >= accuracy_floor
+    gated["passes_closed_precision_floor"] = gated["closed_precision_mean"] >= closed_precision_floor
+    gated["passes_policy_gates"] = (
+        gated["passes_accuracy_floor"] & gated["passes_closed_precision_floor"]
+    )
+    return gated
+
+
+def select_final_config(
+    gated_summary: pd.DataFrame,
+    pr_auc_top_band: float,
+) -> tuple[pd.Series, str]:
+    passing = gated_summary[gated_summary["passes_policy_gates"]].copy()
+
+    # Normal path: filter by policy gates, then PR-AUC top-band, then thresholded closed-F1.
+    if not passing.empty:
+        best_pr_auc = float(passing["pr_auc_closed_mean"].max())
+        top_band = passing[passing["pr_auc_closed_mean"] >= (best_pr_auc - pr_auc_top_band)].copy()
+        winner = top_band.sort_values(
+            by=["closed_f1_mean", "closed_precision_mean", "accuracy_mean"],
+            ascending=False,
+        ).iloc[0]
+        rationale = (
+            "Selected from gate-passing configs by PR-AUC top-band, then closed-F1/precision/accuracy tie-break."
+        )
+        return winner, rationale
+
+    # Fallback path from eval protocol: if nothing passes floors, pick max closed-F1 and document shortfall.
+    fallback = gated_summary.sort_values(
+        by=["closed_f1_mean", "closed_precision_mean", "pr_auc_closed_mean"],
+        ascending=False,
+    ).iloc[0]
+    rationale = (
+        "No config passed policy floors; selected fallback with max closed-F1 "
+        "(precision-floor shortfall documented)."
+    )
+    return fallback, rationale
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Run repeated stratified CV for v2 model families.")
     parser.add_argument(
@@ -213,6 +259,24 @@ def parse_args():
         default=Path(__file__).resolve().parents[2] / "artifacts" / "cv",
         help="Directory to write metrics artifacts",
     )
+    parser.add_argument(
+        "--accuracy-floor",
+        type=float,
+        default=0.85,
+        help="Policy gate floor on mean CV accuracy",
+    )
+    parser.add_argument(
+        "--closed-precision-floor",
+        type=float,
+        default=0.30,
+        help="Policy gate floor on mean CV closed precision",
+    )
+    parser.add_argument(
+        "--pr-auc-top-band",
+        type=float,
+        default=0.01,
+        help="Top-band width around best PR-AUC for final shortlist",
+    )
     return parser.parse_args()
 
 
@@ -242,15 +306,52 @@ def main():
         raise SystemExit("No CV results produced (all model runs failed/skipped).")
 
     summary = summarize_metrics(cv_metrics)
+    gated_summary = apply_policy_gates(
+        summary=summary,
+        accuracy_floor=args.accuracy_floor,
+        closed_precision_floor=args.closed_precision_floor,
+    )
+    winner, winner_rationale = select_final_config(
+        gated_summary=gated_summary,
+        pr_auc_top_band=args.pr_auc_top_band,
+    )
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
     cv_path = args.output_dir / "metrics_cv.csv"
     summary_path = args.output_dir / "metrics_cv_summary.csv"
+    gated_summary_path = args.output_dir / "metrics_cv_summary_gated.csv"
+    selected_path = args.output_dir / "selected_config.json"
     cv_metrics.to_csv(cv_path, index=False)
     summary.to_csv(summary_path, index=False)
+    gated_summary.to_csv(gated_summary_path, index=False)
+
+    selected_payload = {
+        "selected": {
+            "model_family": winner["model_family"],
+            "model_key": winner["model_key"],
+            "mode": winner["mode"],
+            "feature_bundle": winner["feature_bundle"],
+            "decision_threshold": float(winner["decision_threshold"]),
+            "accuracy_mean": float(winner["accuracy_mean"]),
+            "closed_precision_mean": float(winner["closed_precision_mean"]),
+            "closed_recall_mean": float(winner["closed_recall_mean"]),
+            "closed_f1_mean": float(winner["closed_f1_mean"]),
+            "pr_auc_closed_mean": float(winner["pr_auc_closed_mean"]),
+            "passes_policy_gates": bool(winner["passes_policy_gates"]),
+        },
+        "policy": {
+            "accuracy_floor": args.accuracy_floor,
+            "closed_precision_floor": args.closed_precision_floor,
+            "pr_auc_top_band": args.pr_auc_top_band,
+        },
+        "selection_rationale": winner_rationale,
+    }
+    selected_path.write_text(json.dumps(selected_payload, indent=2), encoding="utf-8")
 
     print(f"Saved fold metrics: {cv_path}")
     print(f"Saved summary metrics: {summary_path}")
+    print(f"Saved gated summary metrics: {gated_summary_path}")
+    print(f"Saved selected config: {selected_path}")
     print("\nTop rows by closed_f1_mean (compact view):")
     compact_cols = [
         "model_family",
@@ -272,6 +373,30 @@ def main():
     )
     print(compact.to_string(index=False))
     print("\n(See full metrics with std columns in metrics_cv_summary.csv)")
+    print("\nPolicy-gate pass count:", int(gated_summary["passes_policy_gates"].sum()))
+    print("\nSelected config:")
+    print(
+        gated_summary[
+            (gated_summary["model_family"] == winner["model_family"])
+            & (gated_summary["mode"] == winner["mode"])
+        ][
+            [
+                "model_family",
+                "mode",
+                "feature_bundle",
+                "accuracy_mean",
+                "closed_precision_mean",
+                "closed_recall_mean",
+                "closed_f1_mean",
+                "pr_auc_closed_mean",
+                "passes_policy_gates",
+            ]
+        ]
+        .head(1)
+        .round(3)
+        .to_string(index=False)
+    )
+    print("Selection rationale:", winner_rationale)
 
 
 if __name__ == "__main__":

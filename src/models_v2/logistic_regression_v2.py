@@ -39,6 +39,7 @@ class UnifiedLogisticRegression:
         mode: str = "two-stage",
         feature_bundle: str = "low_plus_medium",
         use_interactions: bool = True,
+        model_params: dict | None = None,
     ):
         """
         Initialize the model.
@@ -52,6 +53,7 @@ class UnifiedLogisticRegression:
         self.mode = mode
         self.feature_bundle = feature_bundle
         self.use_interactions = use_interactions
+        self.model_params = dict(model_params or {})
         self.model = None
         self._feature_names = None
         self.featurizer = SharedPlaceFeaturizer(
@@ -59,6 +61,15 @@ class UnifiedLogisticRegression:
             use_source_confidence=False,
             use_interactions=use_interactions,
         )
+
+    def _build_classifier(self) -> LogisticRegression:
+        params = {
+            "class_weight": "balanced",
+            "random_state": 42,
+            "max_iter": 1000,
+        }
+        params.update(self.model_params)
+        return LogisticRegression(**params)
     
     def _get_variant_name(self) -> str:
         """Return a human-readable name for this variant."""
@@ -122,11 +133,7 @@ class UnifiedLogisticRegression:
         print(f"  Closed: {(~y_train.astype(bool)).sum()} ({(~y_train.astype(bool)).mean():.1%})")
         print(f"  Features: {X_train.shape[1]}")
         
-        self.model = LogisticRegression(
-            class_weight='balanced',
-            random_state=42, 
-            max_iter=1000
-        )
+        self.model = self._build_classifier()
         self.model.fit(X_train, y_train)
         print("Model trained.")
         
@@ -162,11 +169,7 @@ class UnifiedLogisticRegression:
             
             # Balanced class weight to improve closed recall while maintaining reasonable precision
             # Changed from {0: 3, 1: 1} to 'balanced' for automatic calculation
-            self.model = LogisticRegression(
-                class_weight='balanced',
-                random_state=42, 
-                max_iter=1000
-            )
+            self.model = self._build_classifier()
             self.model.fit(X_uncertain, y_uncertain)
             print("Stage 2 model trained.")
         else:

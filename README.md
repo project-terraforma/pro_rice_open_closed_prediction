@@ -130,3 +130,4 @@ Outputs:
 - `docs/model_results.md` is legacy and preserved for historical context only.
 - Use `docs/cv_results_summary.md` and `docs/feature_importance_results.md` for current project state.
 - Use the protocol in `docs/eval_protocol.md` as the contract for fair model comparison.
+- HPO runner design and rationale: `docs/hpo_runner_design.md`.
