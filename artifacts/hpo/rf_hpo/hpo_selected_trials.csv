@@ -1,0 +1,2 @@
+model_key,mode,feature_bundle,selected_trial,params_json,selection_rationale,accuracy_mean,closed_precision_mean,closed_recall_mean,closed_f1_mean,pr_auc_closed_mean
+rf,single,low_plus_medium,31,"{""class_weight"": ""balanced"", ""max_depth"": 6, ""max_features"": ""log2"", ""min_samples_leaf"": 4, ""min_samples_split"": 6, ""n_estimators"": 597}",No trial passed gates; fallback to max closed-F1.,0.8484618703824538,0.24038428502714212,0.26973684210526316,0.2481067431067431,0.19294280976062111

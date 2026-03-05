@@ -1,0 +1,24 @@
+{
+  "models": [
+    "xgboost"
+  ],
+  "modes": [
+    "single",
+    "two-stage"
+  ],
+  "feature_bundle": "low_plus_medium",
+  "n_trials": 40,
+  "search_cv": {
+    "n_splits": 5,
+    "n_repeats": 1
+  },
+  "confirm_cv": {
+    "n_splits": 5,
+    "n_repeats": 3
+  },
+  "decision_threshold": 0.5,
+  "accuracy_floor": 0.85,
+  "closed_precision_floor": 0.3,
+  "pr_auc_top_band": 0.01,
+  "random_state": 42
+}
