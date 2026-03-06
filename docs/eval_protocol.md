@@ -185,3 +185,6 @@ Status: draft for team review.
 - Additional review items:
   - Confirm whether final decision is anchored to thresholded closed F1 after PR-AUC shortlist.
   - Confirm exact low-cost vs medium-cost feature definitions.
+  - TODO: Recalibrate gate policy into two explicit tiers:
+    - Production gates: stricter deployability floors (to be set with downstream business tolerance for false closed predictions).
+    - Diagnostic gates: research-time comparison floors/objectives for ranking models under current data/label constraints.

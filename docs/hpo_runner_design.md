@@ -1,9 +1,19 @@
-# HPO Runner Design Notes (`run_hpo_experiments.py`)
+# HPO Runner Design Notes
 
 ## Purpose
 Document what the HPO runner does, why it was built this way, and how to interpret outputs.
 
-File: `src/models_v2/run_hpo_experiments.py`
+Primary (baseline/frozen): `src/models_v2/run_hpo_experiments.py`  
+Variant (imbalance-knob pass): `src/models_v2/run_hpo_experiments_weighted.py`
+
+## Baseline vs Variant
+
+- `run_hpo_experiments.py`:
+  - frozen baseline used for first-pass reported HPO results
+  - preserves reproducibility of documented outputs
+- `run_hpo_experiments_weighted.py`:
+  - explores explicit class-imbalance knobs (`class_weight` / `scale_pos_weight`)
+  - intended for second-pass comparison against baseline
 
 ## High-Level Goal
 Run per-model hyperparameter search under the evaluation protocol, then select and confirm one config per model/mode with policy-gate-aware logic.
@@ -61,13 +71,20 @@ Run per-model hyperparameter search under the evaluation protocol, then select a
   - block ETA (current model/mode)
   - full-run ETA (all remaining trials)
 
-## Search Spaces (Current)
+## Search Spaces (Baseline Runner)
 - LR: `C`, `max_iter` (with balanced class weight)
 - LightGBM: boosting/leaf/sampling/regularization parameters
 - RandomForest: tree count/depth/split/feature-sampling parameters
 - XGBoost: boosting/depth/sampling/regularization parameters
 
 Rationales are documented inline in `_sample_params(...)`.
+
+## Search Spaces (Weighted Variant)
+- Includes class-imbalance knob sweeps:
+  - LR/RF: `class_weight` (`None`, `balanced`, custom closed-upweight)
+  - LightGBM: `class_weight` mode and/or `scale_pos_weight`
+  - XGBoost: `scale_pos_weight`
+- Use for second-pass feasibility/comparison runs after baseline is recorded.
 
 ## Artifacts Produced
 - `artifacts/hpo/hpo_search_trials.csv`

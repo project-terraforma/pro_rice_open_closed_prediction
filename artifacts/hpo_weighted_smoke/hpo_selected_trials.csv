@@ -1,0 +1,2 @@
+model_key,mode,feature_bundle,selected_trial,params_json,selection_rationale,accuracy_mean,closed_precision_mean,closed_recall_mean,closed_f1_mean,pr_auc_closed_mean
+lr,two-stage,low_plus_medium,1,"{""C"": 0.2810288421431713, ""class_weight"": null, ""max_iter"": 3000, ""solver"": ""lbfgs""}",No trial passed gates; fallback to max closed-F1.,0.8955208486813024,0.19348852901484478,0.042606516290726815,0.0693354318315955,0.15704369576247607
