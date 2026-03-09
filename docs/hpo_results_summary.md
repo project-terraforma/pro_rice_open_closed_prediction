@@ -276,3 +276,64 @@ Decision threshold: `0.5`
    - if closed performance remains constrained across these checks, treat label coverage/distribution as the primary bottleneck.
 4. Promote labeling pipeline implementation as the next major workstream:
    - hybrid auto-label + targeted review loop to expand reliable labels and improve closed-class performance.
+
+---
+
+# HPO Results Summary (Optuna LR Micro Pass 1)
+
+Date run: 2026-03-08  
+Runner: `src/models_v2/run_hpo_optuna_lr_micro.py`  
+Feature bundle: `low_plus_medium`  
+Models tuned: `lr` (`single`, `two-stage`)  
+Search budget: `40 trials/model-mode`  
+Search CV: `5x1`  
+Confirm CV: `5x3`  
+Decision threshold: `0.5`
+
+## Artifact Sources
+
+- `artifacts/hpo_optuna_lr_micro_pass1/hpo_search_trials.csv`
+- `artifacts/hpo_optuna_lr_micro_pass1/hpo_selected_trials_dualgate.csv`
+- `artifacts/hpo_optuna_lr_micro_pass1/hpo_confirm_metrics_dualgate.csv`
+- `artifacts/hpo_optuna_lr_micro_pass1/hpo_run_config_dualgate.json`
+
+## Confirmed Results (Sorted by Closed F1)
+
+| Model | Mode | Gate Type | Accuracy Mean | Closed Precision Mean | Closed Recall Mean | Closed F1 Mean | PR-AUC Closed Mean |
+|---|---|---|---:|---:|---:|---:|---:|
+| LR | two-stage | diagnostic | 0.860 | 0.251 | 0.257 | 0.251 | 0.190 |
+| LR | single | diagnostic | 0.844 | 0.224 | 0.274 | 0.245 | 0.194 |
+| LR | two-stage | production | 0.872 | 0.261 | 0.192 | 0.215 | 0.191 |
+| LR | single | production | 0.887 | 0.273 | 0.137 | 0.179 | 0.190 |
+
+## Comparison vs Optuna Narrow Pass 1 (Confirm CV Deltas)
+
+`delta = lr_micro - optuna_narrow`
+
+| Model | Mode | Gate Type | Delta Accuracy | Delta Closed Precision | Delta Closed Recall | Delta Closed F1 | Delta PR-AUC Closed |
+|---|---|---|---:|---:|---:|---:|---:|
+| LR | single | diagnostic | -0.008 | -0.005 | +0.032 | +0.012 | -0.000 |
+| LR | two-stage | diagnostic | +0.020 | +0.026 | -0.033 | +0.001 | -0.001 |
+| LR | single | production | -0.008 | -0.036 | +0.030 | +0.025 | +0.003 |
+| LR | two-stage | production | -0.026 | +0.050 | +0.164 | +0.175 | +0.022 |
+
+## Freeze Decision
+
+- Diagnostic winner did not move materially at the top (`LR two-stage diagnostic` closed-F1: `0.2507 -> 0.2513`, +`0.0005`).
+- LR micro improved secondary operating points, but this is now in marginal-gain territory for additional LR HPO.
+- Decision: freeze LR hyperparameters and move to featurizer-`k` and threshold optimization.
+
+Frozen shortlisted configs from this pass:
+- `lr single diagnostic`: `C=0.031066`, `class_weight={0:4.5,1:1.0}`, `max_iter=2000`
+- `lr two-stage diagnostic`: `C=0.018049`, `class_weight={0:5.0,1:1.0}`, `max_iter=1000`
+- `lr single production`: `C=0.018703`, `class_weight={0:3.5,1:1.0}`, `max_iter=1000`
+- `lr two-stage production`: `C=0.032306`, `class_weight={0:3.5,1:1.0}`, `max_iter=1000`
+
+## Next Steps (Post-Freeze)
+
+1. Tune shared-featurizer `k` controls under frozen LR params:
+   - `category_top_k`, `dataset_top_k`, `cluster_top_k`
+   - keep CV protocol fixed (`5x3` confirm-style) and evaluate with dual-gate reporting.
+2. For top `k` settings, run threshold sweeps (`p_open` threshold grid) per frozen config.
+3. Select final diagnostic and production operating points after thresholding.
+4. Re-check production gate feasibility; if still not feasible, document shortfall and proceed to feature-bundle v2 / labeling pipeline workstream.
