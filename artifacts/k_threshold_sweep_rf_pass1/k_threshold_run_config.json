@@ -1,0 +1,59 @@
+{
+  "phase": "confirm",
+  "selected_configs_csv": "/Users/matthewkimotsuki/Library/Mobile Documents/com~apple~CloudDocs/Desktop/OMF/pro_rice_open_closed_prediction/artifacts/hpo_optuna_lr_micro_pass1/hpo_selected_trials_dualgate.csv",
+  "filters": {
+    "models": [
+      "rf"
+    ],
+    "modes": null,
+    "gate_types": null
+  },
+  "k_coarse_grid": {
+    "category_top_k": [
+      15,
+      25,
+      35,
+      50
+    ],
+    "dataset_top_k": [
+      10,
+      20,
+      30,
+      40
+    ],
+    "cluster_top_k": [
+      20,
+      30,
+      45,
+      60
+    ],
+    "top_n": 3,
+    "eval_threshold": 0.5
+  },
+  "k_narrow": {
+    "input_csv": null,
+    "category_deltas": "-5,0,5",
+    "dataset_deltas": "-5,0,5",
+    "cluster_deltas": "-10,0,10",
+    "top_n": 2,
+    "min_value": 1
+  },
+  "threshold": {
+    "input_csv": null,
+    "top_k": 2,
+    "start": 0.05,
+    "end": 0.95,
+    "step": 0.01
+  },
+  "confirm": {
+    "input_csv": "artifacts/k_threshold_sweep_rf_pass1/threshold_final_best.csv",
+    "n_splits": 5,
+    "n_repeats": 10,
+    "random_state": 142
+  },
+  "cv": {
+    "n_splits": 5,
+    "n_repeats": 3
+  },
+  "random_state": 42
+}

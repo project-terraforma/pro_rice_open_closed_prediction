@@ -7,6 +7,8 @@ Primary (baseline/frozen): `src/models_v2/run_hpo_experiments.py`
 Variant (imbalance-knob pass): `src/models_v2/run_hpo_experiments_weighted.py`
 Narrow Optuna pass: `src/models_v2/run_hpo_optuna_narrow.py`
 LR micro Optuna pass: `src/models_v2/run_hpo_optuna_lr_micro.py`
+RF micro Optuna pass: `src/models_v2/run_hpo_optuna_rf_micro.py`
+K+threshold sweep runner: `src/models_v2/run_k_threshold_sweep.py`
 
 ## Baseline vs Variant
 
@@ -24,6 +26,15 @@ LR micro Optuna pass: `src/models_v2/run_hpo_optuna_lr_micro.py`
   - LR-only micro refinement pass (`single`, `two-stage`) after narrowed Optuna
   - tighter ranges around current LR winners
   - same dual-gate selection and confirm-CV reporting
+- `run_hpo_optuna_rf_micro.py`:
+  - RF-only micro refinement pass (`single`) after narrowed Optuna
+  - tighter ranges around current RF winner region
+  - same dual-gate selection and confirm-CV reporting
+- `run_k_threshold_sweep.py`:
+  - model-agnostic sweep of shared-featurizer k controls and decision thresholds
+  - phased modes: `k_coarse`, `k_narrow`, `threshold`, `confirm`, `full`
+  - expects frozen configs from selected-trials CSV
+  - supports LR-now / RF-later workflow with shared artifact format
 
 ## High-Level Goal
 Run per-model hyperparameter search under the evaluation protocol, then select and confirm one config per model/mode with policy-gate-aware logic.

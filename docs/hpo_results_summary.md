@@ -337,3 +337,104 @@ Frozen shortlisted configs from this pass:
 2. For top `k` settings, run threshold sweeps (`p_open` threshold grid) per frozen config.
 3. Select final diagnostic and production operating points after thresholding.
 4. Re-check production gate feasibility; if still not feasible, document shortfall and proceed to feature-bundle v2 / labeling pipeline workstream.
+
+---
+
+# HPO Results Summary (Optuna RF Micro Pass 1)
+
+Date run: 2026-03-08  
+Runner: `src/models_v2/run_hpo_optuna_rf_micro.py`  
+Feature bundle: `low_plus_medium`  
+Models tuned: `rf` (`single`)  
+Search budget: `40 trials/model-mode`  
+Search CV: `5x1`  
+Confirm CV: `5x3`  
+Decision threshold: `0.5`
+
+## Artifact Sources
+
+- `artifacts/hpo_optuna_rf_micro_pass1/hpo_search_trials.csv`
+- `artifacts/hpo_optuna_rf_micro_pass1/hpo_selected_trials_dualgate.csv`
+- `artifacts/hpo_optuna_rf_micro_pass1/hpo_confirm_metrics_dualgate.csv`
+- `artifacts/hpo_optuna_rf_micro_pass1/hpo_run_config_dualgate.json`
+
+## Confirmed Results
+
+| Model | Mode | Gate Type | Accuracy Mean | Closed Precision Mean | Closed Recall Mean | Closed F1 Mean | PR-AUC Closed Mean |
+|---|---|---|---:|---:|---:|---:|---:|
+| RF | single | diagnostic | 0.857 | 0.237 | 0.234 | 0.231 | 0.182 |
+| RF | single | production | 0.901 | 0.272 | 0.054 | 0.090 | 0.202 |
+
+## Comparison vs Optuna Narrow Pass 1 (Confirm CV Deltas)
+
+`delta = rf_micro - optuna_narrow`
+
+| Model | Mode | Gate Type | Delta Accuracy | Delta Closed Precision | Delta Closed Recall | Delta Closed F1 | Delta PR-AUC Closed |
+|---|---|---|---:|---:|---:|---:|---:|
+| RF | single | diagnostic | -0.005 | -0.001 | +0.015 | +0.006 | +0.002 |
+| RF | single | production | +0.003 | -0.002 | -0.017 | -0.022 | +0.006 |
+
+## Freeze Decision
+
+- RF micro gave a modest diagnostic improvement (`closed_f1 +0.0056`) with slightly higher recall and similar precision.
+- Production-oriented RF point improved accuracy/PR-AUC but regressed on closed recall/F1.
+- Decision: freeze RF hyperparameters from this micro pass and proceed to the same phased `k`-then-threshold sweep workflow used for LR.
+
+Frozen shortlisted configs from this pass:
+- `rf single diagnostic`: `n_estimators=375`, `max_depth=8`, `min_samples_leaf=7`, `min_samples_split=6`, `max_features=log2`, `class_weight=balanced`
+- `rf single production`: `n_estimators=525`, `max_depth=8`, `min_samples_leaf=5`, `min_samples_split=11`, `max_features=log2`, `class_weight={0:4.0,1:1.0}`
+
+## Next Steps (RF Post-Freeze)
+
+1. Run phased `k` sweep (`k_coarse -> k_narrow`) on frozen RF config(s) at fixed threshold (`0.5`).
+2. Run threshold sweep on shortlisted RF `k` candidates.
+3. Compare finalized RF operating points against finalized LR operating points before final recommendation.
+
+---
+
+# K/Threshold Phased Sweep + Confirm (LR + RF)
+
+Date run: 2026-03-09  
+Runner: `src/models_v2/run_k_threshold_sweep.py`  
+Phases executed: `k_coarse -> k_narrow -> threshold -> confirm`  
+Confirm CV: `5x10` (`random_state=142`)
+
+## Artifact Sources
+
+- `artifacts/k_threshold_sweep_lr_pass1/k_coarse_metrics.csv`
+- `artifacts/k_threshold_sweep_lr_pass1/k_narrow_metrics.csv`
+- `artifacts/k_threshold_sweep_lr_pass1/threshold_final_best.csv`
+- `artifacts/k_threshold_sweep_lr_pass1/threshold_confirm_metrics.csv`
+- `artifacts/k_threshold_sweep_rf_pass1/k_coarse_metrics.csv`
+- `artifacts/k_threshold_sweep_rf_pass1/k_narrow_metrics.csv`
+- `artifacts/k_threshold_sweep_rf_pass1/threshold_final_best.csv`
+- `artifacts/k_threshold_sweep_rf_pass1/threshold_confirm_metrics.csv`
+
+## Confirmed Operating Points (Sorted by Closed F1)
+
+| Model | Mode | Gate Type | k (cat,ds,cl) | Threshold | Accuracy Mean | Closed Precision Mean | Closed Recall Mean | Closed F1 Mean | PR-AUC Closed Mean |
+|---|---|---|---|---:|---:|---:|---:|---:|---:|
+| LR | two-stage | diagnostic | (50,5,45) | 0.51 | 0.860 | 0.251 | 0.260 | 0.254 | 0.205 |
+| RF | single | diagnostic | (50,5,70) | 0.50 | 0.846 | 0.230 | 0.283 | 0.251 | 0.203 |
+| LR | single | diagnostic | (25,5,60) | 0.50 | 0.841 | 0.218 | 0.268 | 0.238 | 0.198 |
+| LR | single | production | (45,5,35) | 0.41 | 0.903 | 0.328 | 0.045 | 0.076 | 0.195 |
+| RF | single | production | (50,5,70) | 0.48 | 0.907 | 0.388 | 0.033 | 0.060 | 0.215 |
+| LR | two-stage | production | (55,5,10) | 0.33 | 0.909 | 0.450 | 0.024 | 0.045 | 0.212 |
+
+## Gate Status (After Confirm)
+
+- Production gate pass count: `0 / 6`
+- Diagnostic gate pass count: `6 / 6`
+
+## Interpretation
+
+- Diagnostic frontier is now near-tied between:
+  - `LR two-stage` (`closed_f1 ~ 0.2539`)
+  - `RF single` (`closed_f1 ~ 0.2514`)
+- LR remains the top diagnostic point by a small margin (`~0.0025` closed-F1), while RF diagnostic keeps slightly higher closed recall.
+- Production-gate feasibility remains the key blocker:
+  - no confirmed point reaches strict production floors (`closed_precision >= 0.70`, `accuracy >= 0.90`, `closed_recall >= 0.05`).
+- Current recommendation:
+  - keep `LR two-stage` as primary diagnostic winner,
+  - keep `RF single` as co-frontier/fallback for recall-sensitive exploration,
+  - treat this stage as an iteration milestone, not production-ready.
