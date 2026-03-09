@@ -5,6 +5,8 @@ Document what the HPO runner does, why it was built this way, and how to interpr
 
 Primary (baseline/frozen): `src/models_v2/run_hpo_experiments.py`  
 Variant (imbalance-knob pass): `src/models_v2/run_hpo_experiments_weighted.py`
+Narrow Optuna pass: `src/models_v2/run_hpo_optuna_narrow.py`
+LR micro Optuna pass: `src/models_v2/run_hpo_optuna_lr_micro.py`
 
 ## Baseline vs Variant
 
@@ -14,6 +16,14 @@ Variant (imbalance-knob pass): `src/models_v2/run_hpo_experiments_weighted.py`
 - `run_hpo_experiments_weighted.py`:
   - explores explicit class-imbalance knobs (`class_weight` / `scale_pos_weight`)
   - intended for second-pass comparison against baseline
+- `run_hpo_optuna_narrow.py`:
+  - narrowed Optuna pass on frontier models (`lr`, `rf`)
+  - uses dual-gate selection (`production`, `diagnostic`) + confirm CV
+  - rationale and ranges documented in `docs/hpo_optuna_narrow_design.md`
+- `run_hpo_optuna_lr_micro.py`:
+  - LR-only micro refinement pass (`single`, `two-stage`) after narrowed Optuna
+  - tighter ranges around current LR winners
+  - same dual-gate selection and confirm-CV reporting
 
 ## High-Level Goal
 Run per-model hyperparameter search under the evaluation protocol, then select and confirm one config per model/mode with policy-gate-aware logic.
@@ -105,4 +115,5 @@ Rationales are documented inline in `_sample_params(...)`.
 ## Recommended Next Enhancements
 1. Add optional threshold sweep on top-N search trials per model.
 2. Add markdown report export (`artifacts/hpo/hpo_summary.md`).
-3. Add optional Optuna backend after random-search baseline is established.
+3. Extend narrowed Optuna pass to optional additional model families if frontier changes.
+4. Add one command-level switch to run random, narrowed Optuna, and LR micro modes from a single entrypoint.

@@ -59,8 +59,18 @@ Status: draft for team review.
   - Choose threshold that maximizes closed F1
   - Subject to guardrail floors
 - Open metrics are reported as guardrails/context, but are not the primary ranking metric.
-- Proposed default precision floor: `closed_precision >= 0.30`.
-- Proposed default accuracy floor: `accuracy >= 0.85`.
+- Legacy baseline floors (kept for historical comparability):
+  - `closed_precision >= 0.30`
+  - `accuracy >= 0.85`
+- Updated dual-gate policy (current):
+  - Production gates (precision-first deployability):
+    - `closed_precision >= 0.70`
+    - `accuracy >= 0.90`
+    - `closed_recall >= 0.05`
+  - Diagnostic gates (research ranking under current constraints):
+    - `closed_precision >= 0.20`
+    - `accuracy >= 0.84`
+    - rank by `closed_f1` (primary), `pr_auc_closed` (secondary)
 - If no threshold satisfies the floor, pick threshold with max closed F1 and document the precision shortfall.
 
 ### Rationale for Accuracy Floor (`0.85`)
@@ -113,6 +123,10 @@ Status: draft for team review.
   - temporarily relax floors to estimate feasibility envelopes,
   - but label these runs as exploratory and do not use them for final selection claims.
 - Final reported recommendation must always be evaluated against the official policy floors.
+- Reporting requirement with dual-gate policy:
+  - Always report both `production_gate_pass` and `diagnostic_gate_pass`.
+  - Use production gate status for deployability decisions.
+  - Use diagnostic gate/ranking to guide iteration and model-development prioritization.
 
 ### Cross-Model vs Per-Model Ceiling Views
 - We report two complementary evaluation views:

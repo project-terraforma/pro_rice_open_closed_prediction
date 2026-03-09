@@ -1,0 +1,33 @@
+{
+  "models": [
+    "lr",
+    "rf"
+  ],
+  "modes": [
+    "single",
+    "two-stage"
+  ],
+  "feature_bundle": "low_plus_medium",
+  "n_trials": 40,
+  "search_cv": {
+    "n_splits": 5,
+    "n_repeats": 1
+  },
+  "confirm_cv": {
+    "n_splits": 5,
+    "n_repeats": 3
+  },
+  "decision_threshold": 0.5,
+  "sampler": "optuna.tpe",
+  "production_gates": {
+    "accuracy_floor": 0.9,
+    "closed_precision_floor": 0.7,
+    "closed_recall_floor": 0.05
+  },
+  "diagnostic_gates": {
+    "accuracy_floor": 0.84,
+    "closed_precision_floor": 0.2,
+    "ranking": "closed_f1 then pr_auc_closed"
+  },
+  "random_state": 42
+}

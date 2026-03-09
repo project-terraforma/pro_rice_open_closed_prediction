@@ -1,5 +1,8 @@
 # HPO Results Summary (Current Pass)
 
+Note: This baseline run used the legacy gate policy (`accuracy>=0.85`, `closed_precision>=0.30`).
+Current protocol now tracks dual gates (production + diagnostic); see `docs/eval_protocol.md`.
+
 Date run: 2026-03-05  
 Runner: `src/models_v2/run_hpo_experiments.py`  
 Feature bundle: `low_plus_medium`  
@@ -172,6 +175,21 @@ Important caveat:
   - closed F1 is low (`~0.057`)
 - So this is a technical gate pass under current floors, but not yet a strong closed-detection operating point.
 
+## Gate-Policy Update (After This Run)
+
+To better separate deployability from research ranking, evaluation policy is now documented as dual-gate:
+
+- Production gates (strict, precision-first):
+  - `closed_precision >= 0.70`
+  - `accuracy >= 0.90`
+  - `closed_recall >= 0.05`
+- Diagnostic gates (iteration-focused):
+  - `closed_precision >= 0.20`
+  - `accuracy >= 0.84`
+  - rank by `closed_f1`, then `pr_auc_closed`
+
+This weighted pass should be interpreted as pre-update evidence under legacy floors, with dual-gate policy applied in subsequent runs.
+
 ## Interpretation
 
 - Weighted tuning improved the frontier and produced two strong closed-oriented candidates:
@@ -188,3 +206,73 @@ Important caveat:
 3. After narrowed HPO, run threshold sweeps on shortlisted configs.
 4. Re-evaluate gate status and closed-performance tradeoffs.
 5. TODO: Split gate definitions into `production` vs `diagnostic` in protocol + runner outputs so deployability decisions are separated from research ranking.
+
+Implementation note:
+- Narrow-pass design and rationale are documented in `docs/hpo_optuna_narrow_design.md`.
+
+---
+
+# HPO Results Summary (Optuna Narrow Pass 1)
+
+Date run: 2026-03-06  
+Runner: `src/models_v2/run_hpo_optuna_narrow.py`  
+Feature bundle: `low_plus_medium`  
+Models tuned: `lr` (`single`, `two-stage`), `rf` (`single`)  
+Search budget: `40 trials/model-mode`  
+Search CV: `5x1`  
+Confirm CV: `5x3`  
+Decision threshold: `0.5`
+
+## Artifact Sources
+
+- `artifacts/hpo_optuna_narrow_pass1/hpo_search_trials.csv`
+- `artifacts/hpo_optuna_narrow_pass1/hpo_selected_trials_dualgate.csv`
+- `artifacts/hpo_optuna_narrow_pass1/hpo_confirm_metrics_dualgate.csv`
+- `artifacts/hpo_optuna_narrow_pass1/hpo_run_config_dualgate.json`
+
+## Confirmed Results (Sorted by Closed F1)
+
+| Model | Mode | Gate Type | Accuracy Mean | Closed Precision Mean | Closed Recall Mean | Closed F1 Mean | PR-AUC Closed Mean |
+|---|---|---|---:|---:|---:|---:|---:|
+| LR | two-stage | diagnostic | 0.840 | 0.225 | 0.290 | 0.251 | 0.191 |
+| LR | single | diagnostic | 0.852 | 0.229 | 0.242 | 0.233 | 0.194 |
+| RF | single | diagnostic | 0.862 | 0.238 | 0.219 | 0.225 | 0.179 |
+| LR | single | production | 0.894 | 0.309 | 0.108 | 0.154 | 0.187 |
+| RF | single | production | 0.899 | 0.274 | 0.071 | 0.111 | 0.196 |
+| LR | two-stage | production | 0.898 | 0.211 | 0.027 | 0.041 | 0.169 |
+
+## Gate Status (Dual-Gate Policy)
+
+- Production gate pass count: `0 / 3`
+- Diagnostic gate pass count: `2 / 3`
+  - passes: `LR single`, `RF single`
+  - near-miss: `LR two-stage` diagnostic (`accuracy ~ 0.8399`)
+
+## Interpretation
+
+- Optuna narrowing improved the LR frontier:
+  - `LR two-stage` diagnostic closed F1 improved to `~0.251`
+  - `LR single` diagnostic closed F1 improved to `~0.233`
+- RF remained competitive but was no longer the top closed-F1 model in this pass.
+- No configuration passed strict production gates; this remains a research/iteration stage.
+
+## Current Plan
+
+1. Run LR-only micro Optuna pass to refine around new LR winners:
+   - `src/models_v2/run_hpo_optuna_lr_micro.py`
+2. If confirm improvement is marginal (for example `< ~0.01` closed-F1 gain), freeze LR hyperparameters.
+3. Run decision-threshold sweeps on frozen shortlisted configs.
+4. Re-assess production-gate feasibility and decide whether feature-bundle v2 is needed.
+
+## Next-Phase Plan (Ceiling -> Transfer -> Labeling)
+
+1. Establish practical model ceiling for the current frontier:
+   - freeze shortlisted configs (`lr two-stage`, `lr single`, `rf single`) after final micro-tuning,
+   - run threshold sweeps and keep best diagnostic operating points.
+2. Evaluate transfer across datasets:
+   - apply frozen pipeline/configs across broad vs concentrated city datasets,
+   - compare broad-trained transfer behavior against city-trained behavior.
+3. Use transfer findings to diagnose bottleneck:
+   - if closed performance remains constrained across these checks, treat label coverage/distribution as the primary bottleneck.
+4. Promote labeling pipeline implementation as the next major workstream:
+   - hybrid auto-label + targeted review loop to expand reliable labels and improve closed-class performance.
