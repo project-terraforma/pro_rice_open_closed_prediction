@@ -438,3 +438,25 @@ Confirm CV: `5x10` (`random_state=142`)
   - keep `LR two-stage` as primary diagnostic winner,
   - keep `RF single` as co-frontier/fallback for recall-sensitive exploration,
   - treat this stage as an iteration milestone, not production-ready.
+
+## Frozen LR Reference Configs
+
+These are the current LR reference operating points after LR micro-HPO plus phased `k`/threshold confirm. Treat them as the frozen LR baseline unless a `v2` LR bundle beats them under the same workflow.
+
+| Mode | Gate Type | Selected Trial | Feature Bundle | Hyperparameters | k (cat,ds,cl) | Threshold | Accuracy Mean | Closed Precision Mean | Closed Recall Mean | Closed F1 Mean | PR-AUC Closed Mean |
+|---|---|---:|---|---|---|---:|---:|---:|---:|---:|---:|
+| single | production | 14 | `low_plus_medium` | `C=0.018702742958488373`, `class_weight={0:3.5,1:1.0}`, `max_iter=1000`, `solver=lbfgs` | `(45,5,35)` | 0.41 | 0.903 | 0.328 | 0.045 | 0.076 | 0.195 |
+| single | diagnostic | 38 | `low_plus_medium` | `C=0.031066049133505004`, `class_weight={0:4.5,1:1.0}`, `max_iter=2000`, `solver=lbfgs` | `(25,5,60)` | 0.50 | 0.841 | 0.218 | 0.268 | 0.238 | 0.198 |
+| two-stage | production | 16 | `low_plus_medium` | `C=0.03230600504184561`, `class_weight={0:3.5,1:1.0}`, `max_iter=1000`, `solver=lbfgs` | `(55,5,10)` | 0.33 | 0.909 | 0.450 | 0.024 | 0.045 | 0.212 |
+| two-stage | diagnostic | 19 | `low_plus_medium` | `C=0.018049168526244785`, `class_weight={0:5.0,1:1.0}`, `max_iter=1000`, `solver=lbfgs` | `(50,5,45)` | 0.51 | 0.860 | 0.251 | 0.260 | 0.254 | 0.205 |
+
+Notes:
+- Hyperparameters come from `artifacts/hpo_optuna_lr_micro_pass1/hpo_selected_trials_dualgate.csv`.
+- Final `k` values and thresholds come from `artifacts/k_threshold_sweep_lr_pass1/threshold_confirm_metrics.csv`.
+- RF is not documented as fully frozen at the same bundle-selection level yet, because `v2_rf_single_no_spatial_prior` still needs a full phased rerun before the RF v2 bundle decision is final.
+
+## Next Bundle Iteration Note
+
+- Before creating model-specific v2 bundles, follow:
+  - `docs/feature_bundle_v2_conventions.md`
+- This defines the feature-selection rules, ablation/evaluation workflow, and stop criteria for the next bundle-optimization round.
