@@ -1,5 +1,10 @@
 # Repeated CV Results Summary (Low Plus Medium)
 
+Historical note:
+- this summary reflects an early fixed-threshold comparison run
+- it predates the current dual-gate policy, phased `k`/threshold workflow, and v2 bundle refinement
+- use it as early exploratory context, not as the current decision document
+
 Date run: 2026-03-02  
 Script: `src/models_v2/run_cv_experiments.py`  
 Feature bundle: `low_plus_medium`  
@@ -36,7 +41,7 @@ python src/models_v2/run_cv_experiments.py \
 - Tree models have higher overall accuracy but much lower closed recall and closed F1 at threshold `0.5`.
 - XGBoost has the highest PR-AUC closed, suggesting decent ranking quality but weak thresholded classification under the current threshold.
 
-## Practical Takeaway
+## Practical Takeaway (Historical)
 
 - If selecting by thresholded closed detection right now, LR (especially two-stage) is the best current candidate.
 - If selecting by score ranking quality (threshold-independent), XGBoost is competitive and may improve with threshold tuning/calibration.

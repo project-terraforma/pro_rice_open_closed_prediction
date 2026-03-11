@@ -1,204 +1,206 @@
-# Evaluation Protocol (Draft)
+# Evaluation Protocol
 
 ## Purpose
-Define one fixed evaluation contract for all open/closed experiments so results are comparable and not driven by ad hoc threshold or split choices.
+Define the current evaluation contract for all open/closed experiments so model comparisons, bundle comparisons, and future data-expansion studies are measured the same way.
 
-Status: draft for team review.
+Status:
+- current working policy for model-selection and bundle-selection
+- replaces earlier single-floor/legacy-gate language except where explicitly labeled historical
 
 ## 1) Label and Metric Conventions
+
 - Ground-truth label: `open=1`, `closed=0`.
-- Report metrics in every experiment:
-  - Overall accuracy
-  - Open precision
-  - Open recall
-  - Open F1
-  - Closed precision
-  - Closed recall
-  - Closed F1 - useful for evaluating performance once u have determined the threshold
-  - PR-AUC for the closed class - useful for picking the best model family
-- Closed-class metric computation rule: - all this is really saying is that for these closed metrics "closed" is treated as the target/postive class
-  - For threshold metrics, use predictions mapped to closed as the positive target.
-  - For PR-AUC, use closed probability score (`p_closed = 1 - p_open`).
+- Always report:
+  - `accuracy`
+  - `open_precision`, `open_recall`, `open_f1`
+  - `closed_precision`, `closed_recall`, `closed_f1`
+  - `pr_auc_closed`
+- Closed-class computation rule:
+  - for thresholded metrics, treat `closed` as the positive class
+  - for PR-AUC, use `p_closed = 1 - p_open`
+
+Metric roles:
+- `pr_auc_closed`:
+  - threshold-independent ranking signal
+  - useful for comparing model quality when threshold choice is not fixed yet
+- `closed_f1`:
+  - thresholded operating-point quality
+  - primary metric for choosing among diagnostic candidates after thresholding
+- `closed_precision`:
+  - main deployability guardrail
+- `accuracy`:
+  - global reliability guardrail, not primary optimization target
 
 ## 2) Data Split Policy
-- Keep the existing held-out test split fixed and untouched for selection/tuning.
-- Use train+val only for model and threshold selection.
-- For robustness, run repeated stratified CV (cross-validation) on train+val: - each fold gets a turn as validation, reduces split luck, then for overall validation performance u do mean across folds, look at the spread across folds to ensure stability
-  - Proposed default: 5 folds x 3 repeats (`random_state=42`).
-- Test split is evaluated once per final chosen configuration.
 
-## 3) Feature Policy (OKR Constraint)
-- Allowed features: schema-native Overture fields with simple deterministic transforms.
+- Keep held-out test split fixed and untouched during tuning.
+- Use `train + val` only for HPO, `k` tuning, threshold tuning, and bundle comparison.
+- Default robustness protocol:
+  - search/tuning CV: `5 folds x 1 repeat` or `5 folds x 3 repeats`, depending on stage
+  - confirm CV: `5 folds x 10 repeats` for final shortlisted operating points
+- Evaluate the held-out test split once for the final chosen configuration only.
+
+## 3) Feature Policy
+
+- Allowed:
+  - schema-native Overture features
+  - simple deterministic transforms
+  - low/medium-cost aggregate or fold-safe prior features
 - Disallowed:
-  - external datasets or APIs
-  - web-derived signals outside Overture schema
-  - expensive per-place inference pipelines
-  - live URL probing features (e.g., `url_live`, `url_status_code`) that require runtime web requests
-- Team policy exclusions:
-  - Do not use global confidence or source-confidence-derived features for training/evaluation.
-  - For this sample dataset, do not use `emails`-based features (field is fully null in current sample).
-- Special handling for label-derived encodings:
-  - `category_closure_risk` is allowed as a medium-cost schema-native feature.
-  - It must be computed fold-safely (out-of-fold on training data only), with held-out/test rows never used to build the encoding table.
-- Every feature used in experiments must be listed in a feature inventory table with:
-  - source field
-  - transform
-  - cost tier (`low` or `medium`)
+  - external APIs or external datasets
+  - runtime web probing features
+  - expensive per-record inference pipelines
+  - confidence-derived features excluded by team policy
+- Special handling:
+  - label-derived priors such as `category_closure_risk` and `spatial_cluster_closed_rate` are allowed only if computed fold-safely
 
-## 4) Model Families in Ceiling Study
-- Minimum set to run under the same feature policy:
-  - Rules baseline
-  - Logistic Regression
-  - Random Forest or constrained GBDT
-  - LightGBM (constrained)
-- Optional variants (single-stage, two-stage, etc.) are allowed, but must follow this protocol and team feature exclusions.
+## 4) Evaluation Views
 
-## 5) Thresholding and Selection Rule
-- Primary ranking metric (cross-validation): PR-AUC (closed).
-- Operating threshold rule (cross-validation):
-  - Choose threshold that maximizes closed F1
-  - Subject to guardrail floors
-- Open metrics are reported as guardrails/context, but are not the primary ranking metric.
-- Legacy baseline floors (kept for historical comparability):
-  - `closed_precision >= 0.30`
-  - `accuracy >= 0.85`
-- Updated dual-gate policy (current):
-  - Production gates (precision-first deployability):
-    - `closed_precision >= 0.70`
-    - `accuracy >= 0.90`
-    - `closed_recall >= 0.05`
-  - Diagnostic gates (research ranking under current constraints):
-    - `closed_precision >= 0.20`
-    - `accuracy >= 0.84`
-    - rank by `closed_f1` (primary), `pr_auc_closed` (secondary)
-- If no threshold satisfies the floor, pick threshold with max closed F1 and document the precision shortfall.
+We maintain two distinct evaluation views and do not mix them:
 
-### Rationale for Accuracy Floor (`0.85`)
-- The dataset is strongly imbalanced (~90% open / ~10% closed), so accuracy alone is not a reliable ranking metric.
-- A pure all-open policy can achieve high accuracy while failing closed detection objectives.
-- We still include an accuracy floor to prevent selecting operating points that improve closed metrics only by causing excessive overall errors.
-- `0.85` is intended as a guardrail based on current observed model ranges, not as a primary optimization target.
-- Model ranking remains driven by closed-class objectives (PR-AUC and thresholded closed F1), with accuracy used as a minimum acceptable reliability constraint.
+- Fair cross-model comparison:
+  - same feature bundle
+  - same featurizer settings
+  - same CV protocol
+  - same gate logic
+- Per-model ceiling:
+  - model-specific bundle refinement is allowed
+  - model-specific `k` and threshold tuning is allowed
+  - CV protocol and gate logic remain fixed
 
-## 6) Final Model Decision Rule
-- From all candidate model+feature-set combinations:
-  - Step 1: apply guardrails/floors from Section 5.
-  - Step 2: rank by mean CV PR-AUC(closed) and define a top band near the best score.
-    - Initial heuristic: include configs within `0.01` absolute PR-AUC of the best.
-    - This `0.01` value is a starting point and should be revisited after observing CV variability.
-  - Step 3:
-    - If only one config is in the top band, select it.
-    - If multiple configs are in the top band, treat them as effectively tied on primary metric and select using pragmatic criteria:
-      - lower measured end-to-end runtime cost (`feature_extraction_time + inference_time`) on the same hardware and batch-size protocol
-      - lower fold-to-fold variance on closed metrics
-      - lower inference runtime (if end-to-end cost is still tied)
-      - lower feature cost tier (as secondary context)
-      - simpler pipeline
-  - Step 4 final deterministic tie-break (if still tied): choose the simplest model family.
+This separation matters because a model can lose under the fair-comparison view but win under its own optimized bundle.
 
-### Hyperparameter Optimization Policy
-- After framework lock (shared features, shared metrics, fixed split policy), automated hyperparameter optimization is allowed.
-- Acceptable approaches include Grid Search, Randomized Search, or Optuna-style search.
-- Hyperparameter search must use the same CV protocol, primary metric (PR-AUC closed), and guardrail floors defined in this document.
-- No test-set results may be used for hyperparameter selection.
+## 5) Current Gate Policy
 
-### Hyperparameter Search Budget (Default)
-- Tune model families separately (LR, LightGBM, RF, XGBoost), not in a single mixed search.
-- Default search budget per model family:
-  - `n_trials = 40` (starting budget for laptop-scale runs)
-  - search CV: `5 folds x 1 repeat` for speed
-  - confirmation CV on shortlisted configs: `5 folds x 3 repeats`
-- Keep the following fixed across model families during fair-comparison HPO:
-  - feature bundle
-  - stage-1 gate policy (for two-stage variants)
-  - random-seed policy
-- Report compute budget in each run artifact (`n_trials`, CV config, runtime).
+The current policy is dual-gate:
 
-### Gate-Feasibility Handling During Tuning
-- If zero configurations pass policy gates in a baseline run:
-  - continue tuning under the same official gates,
-  - use fallback selection (max closed F1 with shortfall explicitly documented), and
-  - track best gate-distance (how far closed precision/accuracy are below floors).
-- Optional exploratory mode is allowed for diagnosis only:
-  - temporarily relax floors to estimate feasibility envelopes,
-  - but label these runs as exploratory and do not use them for final selection claims.
-- Final reported recommendation must always be evaluated against the official policy floors.
-- Reporting requirement with dual-gate policy:
-  - Always report both `production_gate_pass` and `diagnostic_gate_pass`.
-  - Use production gate status for deployability decisions.
-  - Use diagnostic gate/ranking to guide iteration and model-development prioritization.
+### Production Gate
 
-### Cross-Model vs Per-Model Ceiling Views
-- We report two complementary evaluation views:
-  - Cross-model fair comparison: compare model families under the same feature bundle and the same featurizer settings (including top-K vocab/cluster settings).
-  - Per-model ceiling: allow model-specific bundle and featurizer-setting changes to estimate each model family’s best achievable performance.
-- Hyperparameter tuning is allowed in both views, but must follow the same CV protocol, primary metric, and guardrail rules.
-- Reporting must clearly separate these views so fair-comparison conclusions are not mixed with per-model optimized results.
+Purpose:
+- deployability filter
+- precision-first operating point
 
-### Recommended Execution Order
-- Step 1: Lock policy gate logic and decision-rule definitions.
-  - Use the same stage-1 gate logic across all two-stage model families.
-  - Freeze primary metric and guardrail floors before tuning.
-- Step 2: Tune shared featurizer `top_k` controls (category/source/cluster vocab sizes) under fixed CV protocol.
-  - Keep these settings identical across model families for fair cross-model comparison.
-- Step 3: Tune decision thresholds per model using CV predictions.
-  - Optimize thresholded closed F1 subject to guardrails (for example, closed-precision and accuracy floors).
-- Step 4: Run fair cross-model comparison.
-  - Same data splits, same feature bundle, same gate policy, same shared featurizer settings.
-- Step 5: Run per-model ceiling optimization.
-  - After fair comparison is documented, allow model-specific feature/bundle settings and automated hyperparameter optimization.
-  - Keep CV protocol, primary metric, and guardrails unchanged.
-- Step 6: Finalize recommendation and hold out test evaluation.
-  - Apply final rule from Section 6 to choose one configuration.
-  - Evaluate test set once for the selected configuration only.
+Required floors:
+- `accuracy >= 0.90`
+- `closed_precision >= 0.70`
+- `closed_recall >= 0.05`
 
-### Rationale for Decision Rule
-- Closed performance remains the primary objective, so model ranking is anchored to CV PR-AUC(closed).
-- Small PR-AUC differences can be within split noise, so a top-band approach prevents over-optimizing to negligible deltas.
-- The `0.01` band is an explicit, transparent starting heuristic rather than a fixed truth.
-- Once CV variability is known, the top-band width should be calibrated to observed uncertainty (for example, fold-level standard deviation or confidence intervals).
-- Cost and engineering simplicity are used only after primary-performance ties, which preserves performance-first selection while still supporting production practicality.
-- Cost tie-breaking is based on measured end-to-end runtime rather than feature tier alone, since production cost can be dominated by either feature generation or model inference depending on implementation.
+If multiple production-pass candidates exist, rank by:
+1. `closed_precision`
+2. `closed_f1`
+3. `pr_auc_closed`
+4. `accuracy`
 
-## 7) Robustness Criterion
-- For selected top configs, report mean and standard deviation across CV splits for:
-  - closed precision
-  - closed F1
-- Target stability check:
-  - variation within 5% across folds/repeats, or
-  - explicitly document instability and qualify conclusions.
+If no production-pass candidate exists:
+- keep reporting the best-effort production-oriented point
+- explicitly document the shortfall
+- do not claim production readiness
 
-## 8) Required Reporting Outputs
-- Per-run artifact files:
-  - `metrics_cv.csv` (per fold/repeat for all configs/models)
-  - `metrics_test.csv` (single final test evaluation, only make for config/model that we chose)
-  - `config.json` (model, feature set, threshold, seed)
-- Summary tables in `docs/model_results.md`:
-  - Ceiling comparison table (all required metrics)
-  - Robustness table (mean/std on closed metrics)
-  - Performance-per-cost table/curve
-  - Final recommendation with rationale
+### Diagnostic Gate
 
-## 9) Reproducibility Defaults
-- Default random seed: `42`.
-- Same seed list across all models for repeated CV.
-- Any deviation from this protocol must be logged in the run summary.
+Purpose:
+- research-time ranking under current data constraints
+- compare which model/config is most useful for iteration
 
-## 10) Open Items for Team Review
-- Priority review items (high contention / high impact):
-  - Confirm primary ranking objective: PR-AUC(closed) as the performance anchor.
-  - Confirm threshold guardrails and floors:
-    - `closed_precision >= 0.30` (proposed)
-    - `accuracy >= 0.85` (proposed)
-    - whether to add an explicit `open_recall` floor.
-  - Confirm top-band rule for near-tied models:
-    - initial heuristic: within `0.01` PR-AUC of best
-    - plan to recalibrate this band using observed CV variability.
-  - Confirm tie-break policy uses measured end-to-end runtime cost
-    (`feature_extraction_time + inference_time`) rather than feature tier alone.
-- Additional review items:
-  - Confirm whether final decision is anchored to thresholded closed F1 after PR-AUC shortlist.
-  - Confirm exact low-cost vs medium-cost feature definitions.
-  - TODO: Recalibrate gate policy into two explicit tiers:
-    - Production gates: stricter deployability floors (to be set with downstream business tolerance for false closed predictions).
-    - Diagnostic gates: research-time comparison floors/objectives for ranking models under current data/label constraints.
+Required floors:
+- `accuracy >= 0.84`
+- `closed_precision >= 0.20`
+
+If multiple diagnostic-pass candidates exist, rank by:
+1. `closed_f1`
+2. `pr_auc_closed`
+3. `closed_precision`
+4. `accuracy`
+
+If no diagnostic-pass candidate exists:
+- select fallback by best `closed_f1`
+- document the shortfall
+
+## 6) How We Determine "Goodness"
+
+"Goodness" is not one number. It is determined in layers.
+
+### For Model/Bundle Development
+
+Primary question:
+- under the current data regime, which candidate gives the best closed-detection performance without violating basic reliability floors?
+
+Decision rule:
+1. apply the appropriate gate
+2. among passers, rank using the gate-specific metric order
+3. if no candidate passes, use the defined fallback and document the shortfall
+4. confirm the chosen operating point with stronger CV
+
+### For Threshold Selection
+
+Thresholds are not chosen by PR-AUC directly.
+
+Threshold rule:
+1. generate CV fold predictions for a frozen config
+2. sweep thresholds
+3. apply the relevant gate
+4. choose the best gated threshold using the gate-specific ranking rule
+
+In practice:
+- diagnostic thresholding optimizes for `closed_f1` subject to `accuracy` and `closed_precision` floors
+- production thresholding optimizes for `closed_precision` first, then `closed_f1`, subject to all production floors
+
+### For Final Frontier Conclusions
+
+We treat a result as materially better only if:
+- the gain is visible on primary closed-class metrics (`closed_f1`, `pr_auc_closed`)
+- the gain survives confirm CV
+- the gain is larger than ordinary fold/repeat noise
+
+This is why confirmed operating points carry more weight than ablation or threshold-stage-only results.
+
+## 7) Execution Order
+
+Current recommended workflow:
+1. Freeze data split policy and gate definitions.
+2. Run HPO on the chosen feature bundle.
+3. Freeze shortlisted hyperparameter configs.
+4. Tune featurizer `k` values.
+5. Tune thresholds.
+6. Run confirm CV on finalists.
+7. Only after that, run bundle-v2 refinement if needed.
+8. Re-run the same phased workflow on any serious v2 candidate.
+
+## 8) Robustness Criterion
+
+For any final claimed operating point, report:
+- mean and standard deviation across confirm CV for:
+  - `closed_precision`
+  - `closed_recall`
+  - `closed_f1`
+  - `pr_auc_closed`
+
+Interpretation rule:
+- treat unstable gains with caution
+- prefer confirmed improvements that remain directionally consistent across repeats
+
+## 9) Required Reporting Outputs
+
+Every major run should record:
+- selected config artifact
+- confirm metrics artifact
+- run config artifact
+- short written summary in docs
+
+For final comparison docs, include:
+- bundle name
+- hyperparameters
+- `k` settings
+- threshold
+- confirm metrics
+- selection rationale
+- whether the point is production-pass, diagnostic-pass, or fallback
+
+## 10) Historical Note
+
+Earlier work used legacy guardrails such as:
+- `accuracy >= 0.85`
+- `closed_precision >= 0.30`
+
+Those should now be treated as historical context only.
+Current decisions and recommendations must use the dual-gate policy in this document.

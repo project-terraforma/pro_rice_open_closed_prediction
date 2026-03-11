@@ -512,6 +512,41 @@ Versus prior confirmed overall diagnostic leader (`LR two-stage`, `low_plus_medi
 |---|---|---:|---|---|---|---:|---:|---:|---:|---:|---:|
 | single | diagnostic | 35 | `v2_rf_single_no_spatial_prior` | `n_estimators=450`, `max_depth=16`, `min_samples_leaf=6`, `min_samples_split=12`, `max_features=log2`, `class_weight=balanced` | `(25,5,45)` | 0.39 | 0.886 | 0.343 | 0.263 | 0.297 | 0.262 |
 
+## LR V2 Fairness Check
+
+To make the LR vs RF comparison fairer, `v2_lr2` was also run through the full phased sweep plus confirm workflow for `lr two-stage diagnostic`.
+
+Artifact sources:
+- `artifacts/k_threshold_sweep_lr_v2_pass1/k_coarse_metrics.csv`
+- `artifacts/k_threshold_sweep_lr_v2_pass1/k_narrow_metrics.csv`
+- `artifacts/k_threshold_sweep_lr_v2_pass1/threshold_final_best.csv`
+- `artifacts/k_threshold_sweep_lr_v2_pass1/threshold_confirm_metrics.csv`
+
+Confirmed LR v2 point:
+- model: `lr two-stage`
+- bundle: `v2_lr2`
+- trial: `19`
+- `k=(50,5,20)`
+- threshold: `0.57`
+- accuracy: `0.846`
+- closed precision: `0.227`
+- closed recall: `0.277`
+- closed F1: `0.248`
+- PR-AUC closed: `0.202`
+
+## V2 Bundle Comparison (Confirmed)
+
+| Model | Mode | Feature Bundle | Trial | k (cat,ds,cl) | Threshold | Accuracy Mean | Closed Precision Mean | Closed Recall Mean | Closed F1 Mean | PR-AUC Closed Mean |
+|---|---|---|---:|---|---:|---:|---:|---:|---:|---:|
+| LR | two-stage | `v2_lr2` | 19 | (50,5,20) | 0.57 | 0.846 | 0.227 | 0.277 | 0.248 | 0.202 |
+| RF | single | `v2_rf_single_no_spatial_prior` | 35 | (25,5,45) | 0.39 | 0.886 | 0.343 | 0.263 | 0.297 | 0.262 |
+
+Interpretation:
+- `v2_lr2` did not improve on the frozen LR baseline (`low_plus_medium`, confirmed `closed_f1 ~ 0.254`, `pr_auc_closed ~ 0.205`).
+- `v2_rf_single_no_spatial_prior` remained clearly ahead of `v2_lr2` on accuracy, closed precision, closed F1, and PR-AUC closed.
+- `v2_lr2` retained slightly higher closed recall than RF v2 at confirm, but not enough to offset RF v2's large gains in precision, closed F1, and PR-AUC closed.
+- This supports the fairness claim that LR was not simply left behind due to bundle under-iteration.
+
 ## Next Bundle Iteration Note
 
 - Before creating model-specific v2 bundles, follow:

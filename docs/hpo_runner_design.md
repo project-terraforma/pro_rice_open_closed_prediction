@@ -37,7 +37,7 @@ K+threshold sweep runner: `src/models_v2/run_k_threshold_sweep.py`
   - supports LR-now / RF-later workflow with shared artifact format
 
 ## High-Level Goal
-Run per-model hyperparameter search under the evaluation protocol, then select and confirm one config per model/mode with policy-gate-aware logic.
+Run per-model hyperparameter search under the evaluation protocol, then select and confirm one config per model/mode/gate using the current dual-gate policy.
 
 ## Why A Separate Runner
 - Keeps HPO logic separate from baseline CV runner.
@@ -50,9 +50,14 @@ Run per-model hyperparameter search under the evaluation protocol, then select a
    - sample `n_trials` hyperparameter configs
    - evaluate each config via search CV (`search_n_splits x search_n_repeats`)
 3. Apply policy-gate-aware selection:
-   - enforce floors (`accuracy`, `closed_precision`)
-   - if gates pass: shortlist by PR-AUC top-band, tie-break by closed F1
-   - if none pass: fallback to max closed F1 and document shortfall
+   - for current dual-gate runners, evaluate both `production` and `diagnostic`
+   - production:
+     - require `accuracy >= 0.90`, `closed_precision >= 0.70`, `closed_recall >= 0.05`
+     - rank passers by `closed_precision`, then `closed_f1`, then `pr_auc_closed`, then `accuracy`
+   - diagnostic:
+     - require `accuracy >= 0.84`, `closed_precision >= 0.20`
+     - rank passers by `closed_f1`, then `pr_auc_closed`, then `closed_precision`, then `accuracy`
+   - if none pass, use the documented gate-specific fallback and record the shortfall
 4. Re-evaluate selected config with stronger confirmation CV (`confirm_n_splits x confirm_n_repeats`)
 5. Save search, selected, and confirmed artifacts.
 
@@ -73,9 +78,9 @@ Run per-model hyperparameter search under the evaluation protocol, then select a
 
 ### 4) Gate-Aware Selection
 - Aligns with `docs/eval_protocol.md`:
-  - floors are pass/fail constraints
-  - PR-AUC top-band + closed-F1 tie-break for gate-pass candidates
-  - documented fallback when no gate-pass exists
+  - gates are pass/fail constraints first
+  - production and diagnostic use different ranking priorities
+  - documented fallback is required when no gate-pass exists
 
 ### 5) Fast Search, Strong Confirm
 - Search CV defaults to `5x1` for speed.
@@ -122,6 +127,10 @@ Rationales are documented inline in `_sample_params(...)`.
 - End-to-end runtime tie-break integration in final HPO selection
 - Bayesian/Optuna search
 - Automatic markdown summary generation from HPO artifacts
+
+Historical note:
+- older baseline runners and docs may reference legacy single-floor logic or PR-AUC top-band tie-breaks
+- current selection policy for active workflows is the dual-gate policy in `docs/eval_protocol.md`
 
 ## Recommended Next Enhancements
 1. Add optional threshold sweep on top-N search trials per model.
