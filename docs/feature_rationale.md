@@ -2,6 +2,21 @@
 
 This document explains why each feature in `docs/feature_inventory.csv` exists.
 
+## Cost Tier Definitions
+
+- `low`
+  - record-local, schema-native, cheap deterministic transforms
+  - examples: counts, booleans, simple recency bins, regex flags, direct field-presence indicators
+  - no learned vocabularies, no label-derived priors, no neighborhood computation, no external services
+- `medium`
+  - still schema-native and scalable, but requires additional fitting, aggregation, or controlled preprocessing
+  - examples: fold-safe category/spatial priors, top-K one-hot vocabularies, spatial bucketing, interaction features, dataset-diversity features
+  - acceptable for this ceiling study because these features can be built reproducibly in offline batch workflows
+- `high`
+  - operationally expensive or dependent on external/non-schema-native enrichment
+  - examples: live URL checks, API lookups, crawling, expensive per-record inference, large external joins
+  - excluded from the current study
+
 ## Data completeness and contact signal
 - `addresses_present`: Places with any address data are generally better maintained.
 - `has_addresses`: Same signal as above in model-specific featurizers; indicates basic listing completeness.
