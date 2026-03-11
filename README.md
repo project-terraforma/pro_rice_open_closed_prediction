@@ -7,6 +7,16 @@
 ## Project Goal
 Estimate the practical performance ceiling for predicting `open` vs `closed` places using only scalable schema-native Overture features, then use that ceiling to judge whether further gains are more likely to come from model tuning or from better data/label coverage.
 
+## Navigation
+
+If the repo feels crowded, start with these indexes:
+- [`docs/README.md`](docs/README.md)
+  - current source-of-truth docs vs historical docs
+- [`src/models_v2/README.md`](src/models_v2/README.md)
+  - what each active script does
+- [`artifacts/README.md`](artifacts/README.md)
+  - what each artifact directory contains
+
 ## Current Outcome
 
 This repo now contains a reasonably mature ceiling study for the current dataset under low/medium-cost feature engineering.
