@@ -1,0 +1,35 @@
+{
+  "selected_configs_csv": "artifacts/hpo_optuna_narrow_pass1/hpo_selected_trials_dualgate.csv",
+  "models": [
+    "lr",
+    "rf"
+  ],
+  "modes": [
+    "two-stage",
+    "single"
+  ],
+  "gate_types": [
+    "diagnostic"
+  ],
+  "feature_bundle_map_json": null,
+  "k": {
+    "category_top_k": 25,
+    "dataset_top_k": 20,
+    "cluster_top_k": 30
+  },
+  "decision_threshold": 0.5,
+  "cv": {
+    "n_splits": 5,
+    "n_repeats": 2
+  },
+  "random_state": 42,
+  "variants": [
+    "baseline",
+    "minus_spatial",
+    "minus_category",
+    "minus_source_provenance",
+    "minus_temporal",
+    "minus_completeness_contact",
+    "minus_interactions"
+  ]
+}

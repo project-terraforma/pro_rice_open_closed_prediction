@@ -135,7 +135,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Quick logistic-regression feature ablation runner.")
     parser.add_argument(
         "--feature-bundle",
-        choices=["low_only", "low_plus_medium", "full_schema_native"],
+        choices=["low_only", "low_plus_medium", "full_schema_native", "v2_lr2", "v2_rf_single", "v2_rf_single_no_spatial_prior"],
         default="low_plus_medium",
     )
     parser.add_argument("--n-splits", type=int, default=5)
@@ -198,4 +198,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

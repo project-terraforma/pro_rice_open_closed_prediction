@@ -1,0 +1,53 @@
+{
+  "selected_configs_csv": "artifacts/hpo_optuna_narrow_pass1/hpo_selected_trials_dualgate.csv",
+  "models": [
+    "lr",
+    "rf"
+  ],
+  "modes": [
+    "two-stage",
+    "single"
+  ],
+  "gate_types": [
+    "diagnostic"
+  ],
+  "feature_bundle_map_json": null,
+  "k": {
+    "category_top_k": 25,
+    "dataset_top_k": 20,
+    "cluster_top_k": 30
+  },
+  "decision_threshold": 0.5,
+  "cv": {
+    "n_splits": 5,
+    "n_repeats": 2
+  },
+  "random_state": 42,
+  "variants": [
+    "baseline",
+    "minus_spatial",
+    "minus_category",
+    "minus_source_provenance",
+    "minus_temporal",
+    "minus_completeness_contact",
+    "minus_interactions",
+    "minus_spatial_prior_only",
+    "minus_spatial_ids_only",
+    "minus_category_prior_only",
+    "minus_category_ohe_only",
+    "minus_category_metadata_only",
+    "minus_source_counts_only",
+    "minus_source_ohe_only",
+    "minus_temporal_recency_bins",
+    "minus_temporal_continuous",
+    "minus_temporal_diversity_only",
+    "minus_contact_presence_counts",
+    "minus_completeness_aggregates",
+    "minus_name_lexical",
+    "minus_brand_only",
+    "minus_interactions_contact_temporal",
+    "minus_interactions_source_contact",
+    "minus_interactions_sparse_risk",
+    "minus_interactions_brand_contact"
+  ]
+}

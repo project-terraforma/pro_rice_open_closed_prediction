@@ -1,4 +1,4 @@
-version: 1
+version: 2
 notes:
   - "Bundle definitions are fixed for OKR tracking and must be referenced in experiment configs."
   - "All listed features are schema-native and KR1.2-allowed."
@@ -9,6 +9,7 @@ notes:
   - "When bundle contents change, increment version and record rationale in experiment notes."
   - "For fairness, compare model families on the canonical bundle (`low_plus_medium`) first."
   - "Also report per-model best bundle as sensitivity analysis before final model+bundle selection."
+  - "v2_lr2, v2_rf_single, and v2_rf_single_no_spatial_prior are model-specific draft bundles for the post-ceiling ablation round."
 
 bundles:
   low_only:
@@ -172,3 +173,116 @@ bundles:
       - very_fresh
       - very_stale
       - websites_present
+
+  v2_lr2:
+    description: "Draft model-specific v2 bundle for LR two-stage post-ceiling ablation."
+    features:
+      - address_completeness
+      - category_closure_risk
+      - completeness_score
+      - contact_diversity
+      - fresh
+      - geo_cluster_id
+      - has_addresses
+      - has_alternate_categories
+      - has_chain_pattern
+      - has_full_contact_info
+      - has_name
+      - has_phones
+      - has_primary_category
+      - has_socials
+      - has_websites
+      - name_length
+      - num_addresses
+      - num_categories
+      - num_datasets
+      - num_phones
+      - num_socials
+      - num_sources
+      - ohe_geo_cluster__*
+      - ohe_primary_category__*
+      - ohe_source_dataset__*
+      - recency_days
+      - rich_profile
+      - single_source
+      - single_source_no_socials
+      - spatial_cluster_closed_rate
+      - source_temporal_diversity
+      - stale
+      - very_fresh
+      - very_stale
+
+  v2_rf_single:
+    description: "Draft model-specific v2 bundle for RF single-stage post-ceiling ablation."
+    features:
+      - address_completeness
+      - category_closure_risk
+      - completeness_score
+      - contact_diversity
+      - fresh
+      - geo_cluster_id
+      - has_addresses
+      - has_alternate_categories
+      - has_chain_pattern
+      - has_full_contact_info
+      - has_long_name
+      - has_multiple_datasets
+      - has_multiple_sources
+      - has_phones
+      - has_websites
+      - name_length
+      - num_categories
+      - num_datasets
+      - num_phones
+      - num_socials
+      - num_sources
+      - num_websites
+      - ohe_geo_cluster__*
+      - ohe_primary_category__*
+      - ohe_source_dataset__*
+      - recent_with_contacts
+      - recency_days
+      - rich_profile
+      - single_source
+      - spatial_cluster_closed_rate
+      - source_temporal_diversity
+      - stale
+      - very_fresh
+      - very_stale
+
+  v2_rf_single_no_spatial_prior:
+    description: "RF single-stage ablation follow-up bundle: v2_rf_single without spatial_cluster_closed_rate."
+    features:
+      - address_completeness
+      - category_closure_risk
+      - completeness_score
+      - contact_diversity
+      - fresh
+      - geo_cluster_id
+      - has_addresses
+      - has_alternate_categories
+      - has_chain_pattern
+      - has_full_contact_info
+      - has_long_name
+      - has_multiple_datasets
+      - has_multiple_sources
+      - has_phones
+      - has_websites
+      - name_length
+      - num_categories
+      - num_datasets
+      - num_phones
+      - num_socials
+      - num_sources
+      - num_websites
+      - ohe_geo_cluster__*
+      - ohe_primary_category__*
+      - ohe_source_dataset__*
+      - recent_with_contacts
+      - recency_days
+      - rich_profile
+      - single_source
+      - source_temporal_diversity
+      - stale
+      - very_fresh
+      - very_stale

@@ -271,7 +271,7 @@ def parse_args():
     )
     parser.add_argument(
         "--feature-bundle",
-        choices=["low_only", "low_plus_medium", "full_schema_native"],
+        choices=["low_only", "low_plus_medium", "full_schema_native", "v2_lr2", "v2_rf_single", "v2_rf_single_no_spatial_prior"],
         default="low_plus_medium",
     )
     parser.add_argument("--n-trials", type=int, default=40)

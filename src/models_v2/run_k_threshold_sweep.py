@@ -29,6 +29,40 @@ def _parse_int_grid(raw: str) -> list[int]:
     return out
 
 
+def _parse_feature_bundle_overrides(raw: str | None) -> dict[tuple[str, str], str]:
+    if not raw:
+        return {}
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise SystemExit(f"Invalid JSON for --feature-bundle-overrides: {exc}") from exc
+    if not isinstance(data, dict):
+        raise SystemExit("--feature-bundle-overrides must be a JSON object like {'rf:single':'v2_rf_single_no_spatial_prior'}")
+
+    parsed: dict[tuple[str, str], str] = {}
+    for key, value in data.items():
+        if not isinstance(key, str) or ":" not in key:
+            raise SystemExit(f"Invalid override key '{key}'. Expected format 'model:mode'.")
+        if not isinstance(value, str) or not value.strip():
+            raise SystemExit(f"Invalid override bundle for '{key}': {value!r}")
+        model_key, mode = [part.strip() for part in key.split(":", 1)]
+        if not model_key or not mode:
+            raise SystemExit(f"Invalid override key '{key}'. Expected format 'model:mode'.")
+        parsed[(model_key, mode)] = value.strip()
+    return parsed
+
+
+def _apply_feature_bundle_overrides(df: pd.DataFrame, overrides: dict[tuple[str, str], str]) -> pd.DataFrame:
+    if not overrides or df.empty:
+        return df
+    out = df.copy()
+    for (model_key, mode), bundle_name in overrides.items():
+        mask = (out["model_key"] == model_key) & (out["mode"] == mode)
+        if mask.any():
+            out.loc[mask, "feature_bundle"] = bundle_name
+    return out
+
+
 def _safe_predict_open_proba(model, df: pd.DataFrame) -> np.ndarray:
     if hasattr(model, "predict_proba"):
         try:
@@ -295,6 +329,7 @@ def _run_confirm_phase(cv_df: pd.DataFrame, args: argparse.Namespace) -> pd.Data
 
     finalists = pd.read_csv(confirm_input)
     finalists = _filter_selected_configs(finalists, args)
+    finalists = _apply_feature_bundle_overrides(finalists, args.feature_bundle_overrides)
     if finalists.empty:
         raise SystemExit("Confirm phase finalist set is empty after filters.")
 
@@ -380,6 +415,7 @@ def _load_selected_configs(args: argparse.Namespace) -> pd.DataFrame:
     if missing_cols:
         raise SystemExit(f"Selected config CSV missing required columns: {sorted(missing_cols)}")
     selected_df = _filter_selected_configs(selected_df, args)
+    selected_df = _apply_feature_bundle_overrides(selected_df, args.feature_bundle_overrides)
     if selected_df.empty:
         raise SystemExit("No configs left after filters.")
     return selected_df
@@ -411,6 +447,12 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--models", nargs="+", default=None)
     parser.add_argument("--modes", nargs="+", default=None)
     parser.add_argument("--gate-types", nargs="+", default=None)
+    parser.add_argument(
+        "--feature-bundle-overrides",
+        type=str,
+        default=None,
+        help="Optional JSON map, e.g. '{\"rf:single\":\"v2_rf_single_no_spatial_prior\"}'.",
+    )
 
     parser.add_argument("--k-coarse-category-grid", type=str, default="15,25,35,50")
     parser.add_argument("--k-coarse-dataset-grid", type=str, default="10,20,30,40")
@@ -452,7 +494,9 @@ def _parse_args() -> argparse.Namespace:
         default=Path(__file__).resolve().parents[2] / "artifacts" / "k_threshold_sweep",
     )
     parser.add_argument("--show-model-logs", action="store_true")
-    return parser.parse_args()
+    args = parser.parse_args()
+    args.feature_bundle_overrides = _parse_feature_bundle_overrides(args.feature_bundle_overrides)
+    return args
 
 
 def main() -> None:
@@ -467,6 +511,10 @@ def main() -> None:
         "phase": args.phase,
         "selected_configs_csv": str(args.selected_configs_csv),
         "filters": {"models": args.models, "modes": args.modes, "gate_types": args.gate_types},
+        "feature_bundle_overrides": {
+            f"{model_key}:{mode}": bundle_name
+            for (model_key, mode), bundle_name in args.feature_bundle_overrides.items()
+        },
         "k_coarse_grid": {
             "category_top_k": _parse_int_grid(args.k_coarse_category_grid),
             "dataset_top_k": _parse_int_grid(args.k_coarse_dataset_grid),

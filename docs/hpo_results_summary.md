@@ -453,7 +453,64 @@ These are the current LR reference operating points after LR micro-HPO plus phas
 Notes:
 - Hyperparameters come from `artifacts/hpo_optuna_lr_micro_pass1/hpo_selected_trials_dualgate.csv`.
 - Final `k` values and thresholds come from `artifacts/k_threshold_sweep_lr_pass1/threshold_confirm_metrics.csv`.
-- RF is not documented as fully frozen at the same bundle-selection level yet, because `v2_rf_single_no_spatial_prior` still needs a full phased rerun before the RF v2 bundle decision is final.
+- RF final bundle selection is documented below in the follow-up confirm section.
+
+---
+
+# RF V2 Bundle Follow-Up Confirm (No Spatial Prior)
+
+Date run: 2026-03-10  
+Runner: `src/models_v2/run_k_threshold_sweep.py`  
+Bundle under test: `v2_rf_single_no_spatial_prior`  
+Phases executed: `k_coarse -> k_narrow -> threshold -> confirm`  
+Confirm CV: `5x10` (`random_state=142`)
+
+## Artifact Sources
+
+- `artifacts/k_threshold_sweep_rf_no_spatial_prior_pass1/k_coarse_metrics.csv`
+- `artifacts/k_threshold_sweep_rf_no_spatial_prior_pass1/k_narrow_metrics.csv`
+- `artifacts/k_threshold_sweep_rf_no_spatial_prior_pass1/threshold_final_best.csv`
+- `artifacts/k_threshold_sweep_rf_no_spatial_prior_pass1/threshold_confirm_metrics.csv`
+
+## Confirmed RF Winner
+
+| Model | Mode | Gate Type | Feature Bundle | Trial | k (cat,ds,cl) | Threshold | Accuracy Mean | Closed Precision Mean | Closed Recall Mean | Closed F1 Mean | PR-AUC Closed Mean |
+|---|---|---|---|---:|---|---:|---:|---:|---:|---:|---:|
+| RF | single | diagnostic | `v2_rf_single_no_spatial_prior` | 35 | (25,5,45) | 0.39 | 0.886 | 0.343 | 0.263 | 0.297 | 0.262 |
+
+Frozen RF diagnostic config:
+- hyperparameters: `n_estimators=450`, `max_depth=16`, `min_samples_leaf=6`, `min_samples_split=12`, `max_features=log2`, `class_weight=balanced`
+- feature bundle: `v2_rf_single_no_spatial_prior`
+- `k=(25,5,45)`
+- threshold: `0.39`
+
+## Comparison vs Previous Confirmed Leaders
+
+Versus prior confirmed RF diagnostic leader (`low_plus_medium`):
+- accuracy: `+0.0398`
+- closed precision: `+0.1135`
+- closed recall: `-0.0198`
+- closed F1: `+0.0456`
+- PR-AUC closed: `+0.0588`
+
+Versus prior confirmed overall diagnostic leader (`LR two-stage`, `low_plus_medium`):
+- accuracy: `+0.0260`
+- closed precision: `+0.0922`
+- closed recall: `+0.0035`
+- closed F1: `+0.0431`
+- PR-AUC closed: `+0.0574`
+
+## Freeze Decision
+
+- `v2_rf_single_no_spatial_prior` is the new confirmed overall diagnostic leader.
+- Improvement is material rather than marginal, so further manual bundle refinement is not required for this round.
+- Decision: freeze `v2_rf_single_no_spatial_prior` as the RF v2 bundle winner.
+
+## Frozen RF Reference Config
+
+| Mode | Gate Type | Selected Trial | Feature Bundle | Hyperparameters | k (cat,ds,cl) | Threshold | Accuracy Mean | Closed Precision Mean | Closed Recall Mean | Closed F1 Mean | PR-AUC Closed Mean |
+|---|---|---:|---|---|---|---:|---:|---:|---:|---:|---:|
+| single | diagnostic | 35 | `v2_rf_single_no_spatial_prior` | `n_estimators=450`, `max_depth=16`, `min_samples_leaf=6`, `min_samples_split=12`, `max_features=log2`, `class_weight=balanced` | `(25,5,45)` | 0.39 | 0.886 | 0.343 | 0.263 | 0.297 | 0.262 |
 
 ## Next Bundle Iteration Note
 

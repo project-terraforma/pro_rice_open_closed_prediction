@@ -54,7 +54,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--modes", nargs="+", default=["single", "two-stage"], choices=["single", "two-stage"])
     parser.add_argument(
         "--feature-bundle",
-        choices=["low_only", "low_plus_medium", "full_schema_native"],
+        choices=["low_only", "low_plus_medium", "full_schema_native", "v2_lr2", "v2_rf_single", "v2_rf_single_no_spatial_prior"],
         default="low_plus_medium",
     )
     parser.add_argument("--n-trials", type=int, default=30)
@@ -255,4 +255,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
