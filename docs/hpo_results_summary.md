@@ -547,6 +547,52 @@ Interpretation:
 - `v2_lr2` retained slightly higher closed recall than RF v2 at confirm, but not enough to offset RF v2's large gains in precision, closed F1, and PR-AUC closed.
 - This supports the fairness claim that LR was not simply left behind due to bundle under-iteration.
 
+---
+
+# Final Holdout Test Evaluation
+
+Date run: 2026-03-13  
+Runner: `src/models_v2/run_holdout_test_eval.py`  
+Train data: `train_split + val_split`  
+Test data: untouched `test_split`
+
+## Artifact Sources
+
+- `artifacts/holdout_test_rf_final_pass1/holdout_test_metrics.csv`
+- `artifacts/holdout_test_rf_final_pass1/holdout_test_predictions.csv`
+- `artifacts/holdout_test_lr_final_pass1/holdout_test_metrics.csv`
+- `artifacts/holdout_test_lr_final_pass1/holdout_test_predictions.csv`
+
+## Final Holdout Results
+
+| Model | Mode | Feature Bundle | Threshold | Accuracy | Closed Precision | Closed Recall | Closed F1 | PR-AUC Closed |
+|---|---|---|---:|---:|---:|---:|---:|---:|
+| RF | single | `v2_rf_single_no_spatial_prior` | 0.39 | 0.901 | 0.435 | 0.323 | 0.370 | 0.280 |
+| LR | two-stage | `low_plus_medium` | 0.51 | 0.863 | 0.278 | 0.323 | 0.299 | 0.201 |
+
+## Holdout Interpretation
+
+- The frozen RF v2 winner held up on the untouched test split and remained the strongest final model.
+- RF outperformed the frozen LR reference on:
+  - accuracy (`+0.0379`)
+  - closed precision (`+0.1570`)
+  - closed F1 (`+0.0719`)
+  - PR-AUC closed (`+0.0784`)
+- Closed recall was tied (`0.323`) between the final RF and LR holdout points.
+- The production gate is still not met, because the best holdout closed precision (`0.435`) remains below the `0.70` production floor.
+
+## Final Practical Conclusion
+
+- The strongest final model in this repo is:
+  - `RandomForest`
+  - `single`
+  - `v2_rf_single_no_spatial_prior`
+  - `n_estimators=450`, `max_depth=16`, `min_samples_leaf=6`, `min_samples_split=12`, `max_features=log2`, `class_weight=balanced`
+  - `k=(25,5,45)`
+  - `threshold=0.39`
+- This establishes a practical ceiling for the current dataset under low/medium-cost feature engineering.
+- Remaining shortfall against production gates is therefore more plausibly a data/label limitation than a simple lack of model tuning.
+
 ## Next Bundle Iteration Note
 
 - Before creating model-specific v2 bundles, follow:

@@ -1,0 +1,2 @@
+model_key,mode,gate_type,feature_bundle,selected_trial,params_json,category_top_k,dataset_top_k,cluster_top_k,threshold,n_train_plus_val,n_test,accuracy,open_precision,open_recall,open_f1,closed_precision,closed_recall,closed_f1,pr_auc_closed
+lr,two-stage,diagnostic,low_plus_medium,19,"{""C"": 0.018049168526244785, ""class_weight"": {""0"": 5.0, ""1"": 1.0}, ""max_iter"": 1000, ""solver"": ""lbfgs""}",50,5,45,0.51,3082,343,0.8629737609329446,0.9315960912052117,0.9166666666666666,0.9240710823909531,0.2777777777777778,0.3225806451612903,0.29850746268656714,0.20149707118654747

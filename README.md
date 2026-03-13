@@ -40,6 +40,12 @@ Current confirmed diagnostic leader:
   - `closed_recall=0.263`
   - `closed_f1=0.297`
   - `pr_auc_closed=0.262`
+- holdout test metrics:
+  - `accuracy=0.901`
+  - `closed_precision=0.435`
+  - `closed_recall=0.323`
+  - `closed_f1=0.370`
+  - `pr_auc_closed=0.280`
 
 Current confirmed LR reference leader:
 - model: `LogisticRegression`
@@ -54,6 +60,7 @@ Current confirmed LR reference leader:
 
 Practical conclusion:
 - within the current data regime and low/medium-cost feature policy, RF with the frozen v2 bundle is the top confirmed diagnostic configuration
+- that result also held up on the untouched test split
 - strict production gates are still not met, so this remains a ceiling/iteration study rather than a production-ready model
 
 ## What Is In Scope
@@ -119,6 +126,10 @@ How “goodness” is determined:
 
 Historical-only docs:
 - [`docs/cv_results_summary.md`](docs/cv_results_summary.md)
+
+Final evaluation doc:
+- [`docs/hpo_results_summary.md`](docs/hpo_results_summary.md)
+  - includes confirm-CV winners and final holdout test results
 
 ## Feature Bundles
 

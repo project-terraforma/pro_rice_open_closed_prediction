@@ -18,6 +18,10 @@ This directory contains generated outputs from different stages of the experimen
   - confirmed RF v2 winner outputs
 - [`k_threshold_sweep_lr_v2_pass1`](./k_threshold_sweep_lr_v2_pass1)
   - LR v2 fairness-check outputs
+- [`holdout_test_rf_final_pass1`](./holdout_test_rf_final_pass1)
+  - final held-out test results for the frozen RF winner
+- [`holdout_test_lr_final_pass1`](./holdout_test_lr_final_pass1)
+  - final held-out test results for the frozen LR reference
 - [`feature_importance`](./feature_importance)
   - feature-importance exports
 - [`ablation_v2_split_pass1`](./ablation_v2_split_pass1)
@@ -44,10 +48,13 @@ This directory contains generated outputs from different stages of the experimen
    - `hpo_optuna_rf_micro_pass1`
 2. operating-point tuning:
    - `k_threshold_sweep_*`
-3. bundle diagnostics:
+3. final holdout evaluation:
+   - `holdout_test_rf_final_pass1`
+   - `holdout_test_lr_final_pass1`
+4. bundle diagnostics:
    - `ablation_v2_pass1`
    - `ablation_v2_split_pass1`
-4. feature understanding:
+5. feature understanding:
    - `feature_importance`
 
 ## Common File Names
@@ -83,6 +90,10 @@ If you want the frozen LR baseline:
 
 If you want the LR v2 fairness check:
 - [`k_threshold_sweep_lr_v2_pass1/threshold_confirm_metrics.csv`](./k_threshold_sweep_lr_v2_pass1/threshold_confirm_metrics.csv)
+
+If you want final held-out test results:
+- [`holdout_test_rf_final_pass1/holdout_test_metrics.csv`](./holdout_test_rf_final_pass1/holdout_test_metrics.csv)
+- [`holdout_test_lr_final_pass1/holdout_test_metrics.csv`](./holdout_test_lr_final_pass1/holdout_test_metrics.csv)
 
 If you want feature-importance outputs:
 - [`feature_importance`](./feature_importance)
