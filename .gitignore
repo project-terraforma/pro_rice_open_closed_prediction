@@ -8,6 +8,7 @@ __pycache__/
 # Mac system files
 .DS_Store
 
-# # Data files (optional, if large or private)
-# data/*.parquet
-# data/*.csv
+# Data files (optional, if large or private)
+data/sf_ny/
+data/project_c_samples/batches/
+src/cumalitive_training/projectc_data/XGBOOST_PRECISION_ANALYSIS.md
