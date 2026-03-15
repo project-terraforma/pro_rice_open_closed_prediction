@@ -242,3 +242,19 @@ That is:
 - the best confirmed model
 - the best holdout-tested model
 - the cleanest baseline for asking whether larger/better data, rather than more tuning, is what moves the project forward
+
+---
+
+## Update After Running The Recommended Alex Checks
+
+The recommended first two checks have now been run and documented in:
+- `docs/alex_transfer_results.md`
+
+High-level outcome:
+- direct frozen transfer to Alex's labeled `SF + NYC` data was very weak
+- retraining the same frozen RF structure on Alex's labeled data was much stronger
+- the current best interpretation is dataset shift / calibration mismatch, not total RF failure
+- even after retraining, the project production gate is still not met
+
+Practical implication:
+- the next Alex-side step should be threshold/tuning comparison and/or comparison against Alex's own pipeline, not a claim of immediate production readiness

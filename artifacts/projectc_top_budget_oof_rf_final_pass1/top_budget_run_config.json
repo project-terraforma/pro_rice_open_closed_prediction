@@ -1,0 +1,14 @@
+{
+  "predictions_csv": "artifacts/projectc_oof_rf_final_pass1/projectc_oof_predictions.csv",
+  "p_closed_col": "p_closed_oof",
+  "y_true_col": "y_true_open",
+  "budgets": [
+    1.0,
+    2.0,
+    5.0,
+    10.0,
+    15.0,
+    20.0,
+    25.0
+  ]
+}

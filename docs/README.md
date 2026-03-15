@@ -9,9 +9,13 @@ If you want the current project state, read these in order:
 2. [`eval_protocol.md`](eval_protocol.md)
    - source of truth for gates, ranking, and what counts as a "good" result
 3. [`hpo_results_summary.md`](hpo_results_summary.md)
-   - current experiment narrative and frozen reference configs
+  - current experiment narrative and frozen reference configs
 4. [`feature_importance_results.md`](feature_importance_results.md)
-   - feature-importance takeaways
+  - feature-importance takeaways
+5. [`alex_transfer_results.md`](alex_transfer_results.md)
+  - direct-transfer and retrain-on-Alex results
+6. [`top_budget_triage_results.md`](top_budget_triage_results.md)
+  - outcome of the fixed-budget closure-review ranking check
 
 ## Current Source Of Truth
 
@@ -19,6 +23,10 @@ If you want the current project state, read these in order:
   - current evaluation contract
 - [`hpo_results_summary.md`](hpo_results_summary.md)
   - current frontier, frozen configs, v2 bundle outcome
+- [`alex_transfer_results.md`](alex_transfer_results.md)
+  - current Alex-dataset transfer/retrain findings
+- [`top_budget_triage_results.md`](top_budget_triage_results.md)
+  - current top-budget review-triage conclusion
 - [`feature_importance_results.md`](feature_importance_results.md)
   - feature importance results and interpretation
 - [`feature_bundles.json`](feature_bundles.json)
@@ -40,6 +48,10 @@ If you want the current project state, read these in order:
   - rules for creating and evaluating v2 bundles
 - [`feature_bundle_v2_rationale.md`](feature_bundle_v2_rationale.md)
   - why the v2 bundles were chosen
+- [`open_triage_policy_plan.md`](open_triage_policy_plan.md)
+  - proposed two-bucket open-safe / review-queue follow-up
+- [`top_budget_triage_plan.md`](top_budget_triage_plan.md)
+  - proposed fixed-budget top-risk review follow-up
 
 ## Historical / Exploratory Docs
 

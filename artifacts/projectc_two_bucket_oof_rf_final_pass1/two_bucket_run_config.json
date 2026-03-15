@@ -1,0 +1,16 @@
+{
+  "predictions_csv": "artifacts/projectc_oof_rf_final_pass1/projectc_oof_predictions.csv",
+  "p_closed_col": "p_closed_oof",
+  "y_true_col": "y_true_open",
+  "thresholds": [
+    0.02,
+    0.05,
+    0.1,
+    0.15,
+    0.2,
+    0.25,
+    0.3,
+    0.35,
+    0.4
+  ]
+}

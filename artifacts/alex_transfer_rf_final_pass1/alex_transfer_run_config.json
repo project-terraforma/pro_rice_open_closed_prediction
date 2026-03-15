@@ -1,0 +1,21 @@
+{
+  "config_csv": "artifacts/k_threshold_sweep_rf_no_spatial_prior_pass1/threshold_confirm_metrics.csv",
+  "filters": {
+    "models": [
+      "rf"
+    ],
+    "modes": [
+      "single"
+    ],
+    "gate_types": [
+      "diagnostic"
+    ]
+  },
+  "feature_bundle_overrides": {},
+  "data_dir": "/Users/matthewkimotsuki/Library/Mobile Documents/com~apple~CloudDocs/Desktop/OMF/pro_rice_open_closed_prediction/data",
+  "alex_assets_dir": "/Users/matthewkimotsuki/Library/Mobile Documents/com~apple~CloudDocs/Desktop/OMF/places-status-engine/assets",
+  "alex_cities": [
+    "sf",
+    "nyc"
+  ]
+}
