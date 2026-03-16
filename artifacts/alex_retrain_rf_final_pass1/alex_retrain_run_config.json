@@ -12,7 +12,7 @@
     ]
   },
   "feature_bundle_overrides": {},
-  "alex_assets_dir": "/Users/matthewkimotsuki/Library/Mobile Documents/com~apple~CloudDocs/Desktop/OMF/places-status-engine/assets",
+  "alex_assets_dir": "data/alex_assets",
   "alex_cities": [
     "sf",
     "nyc"
