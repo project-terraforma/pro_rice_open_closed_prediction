@@ -1,0 +1,9 @@
+,,test_pr_auc,test_pr_auc,test_pr_auc,auto_precision,n_gold,n_silver
+,,min,mean,max,mean,mean,mean
+strategy,model_type,,,,,,
+random,logistic_regression,0.1159,0.1622,0.2444,0.7335,38.0,257.125
+random,xgboost,0.0789,0.0947,0.1349,0.7955,13.125,626.75
+static,logistic_regression,0.1087,0.1413,0.1921,0.7145,0.0,297.125
+static,xgboost,0.0818,0.1064,0.1357,0.7981,0.0,625.625
+uncertainty,logistic_regression,0.1227,0.1679,0.2047,0.7015,38.0,308.25
+uncertainty,xgboost,0.081,0.0936,0.1132,0.8035,13.5,635.875

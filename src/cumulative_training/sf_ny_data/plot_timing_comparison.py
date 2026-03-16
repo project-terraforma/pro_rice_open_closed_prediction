@@ -6,7 +6,7 @@ Creates bar charts showing:
   - Single-run time (baseline)
   - One chart per model
 
-Output: src/cumalitive_training/sf_ny_data/plots/timing_*.png
+Output: src/cumulative_training/sf_ny_data/plots/timing_*.png
 """
 
 import matplotlib

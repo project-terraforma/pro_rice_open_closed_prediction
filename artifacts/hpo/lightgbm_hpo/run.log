@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/Users/claricepark/Desktop/pro_rice_open_closed_prediction/src/models_v2/run_hpo_experiments.py", line 14, in <module>
+    import numpy as np
+ModuleNotFoundError: No module named 'numpy'

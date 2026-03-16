@@ -31,7 +31,7 @@ The current repo is organized around:
   - current landing page: [`docs/incremental_benchmarking/README.md`](docs/incremental_benchmarking/README.md)
   - main areas:
     - `src/incremental_benchmarking/`
-    - `src/cumalitive_training/`
+    - `src/cumulative_training/`
 - `archive / historical`
   - older v1 modeling, labeling, label-coverage, and exploratory work kept for reference
 
@@ -46,7 +46,7 @@ The current repo is organized around:
 - If you want the incremental-training / benchmarking work:
   - [`docs/incremental_benchmarking/README.md`](docs/incremental_benchmarking/README.md)
   - `src/incremental_benchmarking/`
-  - `src/cumalitive_training/`
+  - `src/cumulative_training/`
 
 ## Repository Layout
 
@@ -54,7 +54,7 @@ The current repo is organized around:
   - shared v2 modeling foundation used by the active workstreams
 - `src/incremental_benchmarking/`
   - current incremental benchmarking work
-- `src/cumalitive_training/`
+- `src/cumulative_training/`
   - current cumulative-training work
 - `src/archive/models/`
   - older v1 modeling code kept mainly for reference

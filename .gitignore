@@ -11,7 +11,7 @@ __pycache__/
 # Data files (non parquets are too large)
 data/sf_ny/
 data/project_c_samples/batches/
-src/cumalitive_training/projectc_data/XGBOOST_PRECISION_ANALYSIS.md
+src/cumulative_training/projectc_data/XGBOOST_PRECISION_ANALYSIS.md
 
 # Model files (too large)
 *.pkl

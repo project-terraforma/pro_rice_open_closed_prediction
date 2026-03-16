@@ -9,7 +9,7 @@ Creates a single plot showing:
 
 Each metric shown as a line across batches 1-5 + single-run dot.
 
-Output: src/cumalitive_training/sf_ny_data/plots/rf_incremental_all_metrics.png
+Output: src/cumulative_training/sf_ny_data/plots/rf_incremental_all_metrics.png
 """
 
 import matplotlib

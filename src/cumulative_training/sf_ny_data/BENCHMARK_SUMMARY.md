@@ -189,7 +189,7 @@ Successfully completed an incremental (warm-start) training benchmark on the ale
 
 ## 💾 Model Persistence
 
-All models saved to: `src/cumalitive_training/sf_ny_data/models_persistence/`
+All models saved to: `src/cumulative_training/sf_ny_data/models_persistence/`
 
 ### Files Created (20 total)
 
@@ -212,7 +212,7 @@ All models saved to: `src/cumalitive_training/sf_ny_data/models_persistence/`
 import joblib
 
 # Load model after batch 5
-model = joblib.load('src/cumalitive_training/sf_ny_data/models_persistence/lr_batch_5.pkl')
+model = joblib.load('src/cumulative_training/sf_ny_data/models_persistence/lr_batch_5.pkl')
 
 # When batch 6 arrives:
 # X_batch_6 = featurizer.transform(batch_6_df)
@@ -236,7 +236,7 @@ batch_5.csv                     12,757 rows (4.8M)
 all_batches_combined.csv        63,787 rows (24M)
 ```
 
-### Models (src/cumalitive_training/sf_ny_data/models_persistence/)
+### Models (src/cumulative_training/sf_ny_data/models_persistence/)
 ```
 lr_batch_1.pkl  …  lr_batch_5.pkl       (Logistic Regression)
 rf_batch_1.pkl  …  rf_batch_5.pkl       (Random Forest)
@@ -244,7 +244,7 @@ xgb_batch_1.pkl …  xgb_batch_5.pkl      (XGBoost)
 lgb_batch_1.pkl …  lgb_batch_5.pkl      (LightGBM)
 ```
 
-### Results (src/cumalitive_training/sf_ny_data/)
+### Results (src/cumulative_training/sf_ny_data/)
 ```
 sf_ny_alex_incremental_results.md       Detailed metrics & timing tables
 ```
@@ -310,7 +310,7 @@ The benchmark successfully demonstrates the full incremental training pipeline:
 import joblib
 
 # Load batch 5 model
-model = joblib.load('src/cumalitive_training/sf_ny_data/models_persistence/lr_batch_5.pkl')
+model = joblib.load('src/cumulative_training/sf_ny_data/models_persistence/lr_batch_5.pkl')
 
 # Load new batch 6 data (must use same featurizer & scaler)
 batch_6 = pd.read_csv('path/to/batch_6.csv')
@@ -322,7 +322,7 @@ y_batch_6 = batch_6['open'].values
 model.fit(X_batch_6, y_batch_6)
 
 # Save for next batch
-joblib.dump(model, 'src/cumalitive_training/sf_ny_data/models_persistence/lr_batch_6.pkl')
+joblib.dump(model, 'src/cumulative_training/sf_ny_data/models_persistence/lr_batch_6.pkl')
 ```
 
 ### Option 2: Run on Different Feature Bundle
@@ -341,8 +341,8 @@ Create visualization script to plot:
 
 ## 📞 Questions?
 
-For detailed metrics per batch, see: `src/cumalitive_training/sf_ny_data/sf_ny_alex_incremental_results.md`
+For detailed metrics per batch, see: `src/cumulative_training/sf_ny_data/sf_ny_alex_incremental_results.md`
 
 For raw data, check:
 - Batches: `data/sf_ny/batches/batch_*.csv`
-- Models: `src/cumalitive_training/sf_ny_data/models_persistence/*.pkl`
+- Models: `src/cumulative_training/sf_ny_data/models_persistence/*.pkl`

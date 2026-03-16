@@ -25,7 +25,7 @@ Use this file to answer three questions quickly:
   - status: active, separate workstream
   - main areas:
     - `../src/incremental_benchmarking/`
-    - `../src/cumalitive_training/`
+    - `../src/cumulative_training/`
   - docs: [`incremental_benchmarking/README.md`](incremental_benchmarking/README.md)
   - note: this workstream is current and separate; it may reuse pieces of the shared v2 foundation, but it is not part of the main ceiling-study reading path
 - `Archive / Historical`
@@ -52,7 +52,7 @@ If you want the incremental-training line of work:
 1. start in `../src/models_v2/README.md` for shared modeling concepts
 2. read [`incremental_benchmarking/README.md`](incremental_benchmarking/README.md)
 3. then review `../src/incremental_benchmarking/`
-4. then review `../src/cumalitive_training/`
+4. then review `../src/cumulative_training/`
 
 ## Practical Guidance
 

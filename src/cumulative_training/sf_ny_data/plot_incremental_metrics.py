@@ -11,7 +11,7 @@ Creates separate plots for:
 Each plot shows warm-start incremental (after batches 1–5) + single run dot.
 X-axis label: "After batch k" — model has accumulated knowledge from batches 1…k.
 
-Output: src/cumalitive_training/sf_ny_data/plots/incremental_benchmark_*.png
+Output: src/cumulative_training/sf_ny_data/plots/incremental_benchmark_*.png
 """
 
 import matplotlib

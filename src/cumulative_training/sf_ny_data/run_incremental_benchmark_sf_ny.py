@@ -12,9 +12,9 @@ This script:
 
 Output files:
 - data/sf_ny/batches/ — test_set.csv, batch_1.csv, ..., batch_5.csv, all_batches_combined.csv
-- src/cumalitive_training/sf_ny_data/models_persistence/ — lr_batch_1.pkl, ..., xgb_batch_5.pkl, etc.
-- src/cumalitive_training/sf_ny_data/sf_ny_incremental_results.md
-- src/cumalitive_training/sf_ny_data/sf_ny_incremental_benchmark_*.png
+- src/cumulative_training/sf_ny_data/models_persistence/ — lr_batch_1.pkl, ..., xgb_batch_5.pkl, etc.
+- src/cumulative_training/sf_ny_data/sf_ny_incremental_results.md
+- src/cumulative_training/sf_ny_data/sf_ny_incremental_benchmark_*.png
 """
 
 from __future__ import annotations
