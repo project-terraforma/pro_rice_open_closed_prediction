@@ -1,34 +1,31 @@
-# Incremental benchmarking — findings and pointers
+# Incremental Benchmarking Docs
 
-This document summarizes the incremental (warm‑start) benchmarking work done on the SF/NY datasets and points to the code, artifacts and key results.
+This directory is the landing page for the current `incremental training / benchmarking` workstream.
 
-Short findings
+## Start Here
 
-- Incremental training yields metrics comparable to single‑run training in most cases; for our SF/NY experiments Random Forest (RF) was the best warm‑start candidate overall (good metric stability, lowest incremental overhead, reasonable serialized size).
-- XGBoost sometimes improves recall/F1 for the closed class in alex‑filtered splits, but had higher precision variability and modest overhead.
-- LightGBM slightly favored single‑run performance in our setup and had higher warm‑start overhead and model size.
-- Logistic Regression is interpretable but had the largest relative time overhead for incremental training.
+1. `docs/cumulative_training/README.md`
+   - quick run instructions and high-level findings for dataset-specific experiments
+2. `src/incremental_benchmarking/run_incremental_benchmark.py`
+   - per-model incremental driver and example flags
+3. `src/incremental_benchmarking/run_incremental_benchmark_all_models.py`
+   - aggregate driver that runs all supported models and collates results
+4. `src/cumulative_training/sf_ny_data/run_incremental_benchmark_sf_ny.py`
+   - SF/NY dataset-specific driver used to produce the alex-filtered experiments
 
-Recommended reading / scripts to run (order)
+## Design / Workflow Docs
 
-1. `docs/cumulative_training/README.md` — quick run instructions and high‑level findings.
-2. `src/cumulative_training/sf_ny_data/BENCHMARK_SUMMARY.md` — detailed metrics, timing and persistence information for the SF/NY runs.
-3. `src/cumulative_training/sf_ny_data/run_incremental_benchmark_sf_ny.py` — the dataset‑specific driver for reproducing the SF/NY benchmark.
-4. `src/incremental_benchmarking/run_incremental_benchmark.py` and `src/incremental_benchmarking/run_incremental_benchmark_all_models.py` — generic drivers for per‑model or multi‑model benchmarking.
-5. `src/models_v2/shared_featurizer.py` — review API expectations (feature bundles and nested place schema) used by the drivers.
-6. Plotting scripts: `src/incremental_benchmarking/plot_incremental_metrics.py` and `src/cumulative_training/sf_ny_data/plot_*` to regenerate figures.
+- incremental pattern: warm-start per batch using `warm_start` (scikit-learn), `xgb_model` (XGBoost) or `init_model` (LightGBM)
+- featurization: `src/models_v2/shared_featurizer.py` — SharedPlaceFeaturizer expected nested place schema and named feature bundles (e.g. `low_plus_medium`)
 
-Most important output folders
+## Supporting Files
 
-- `src/cumulative_training/sf_ny_data/models_persistence/` — serialized models per batch (use for warm‑start inspection).
-- `data/sf_ny/batches/` — canonical train/test splits and batch CSVs used for experiments.
-- `src/cumulative_training/sf_ny_data/` — `BENCHMARK_SUMMARY.md`, results markdowns and `plots/`.
-- `src/incremental_benchmarking/` — drivers and plotting utilities used across datasets.
+- dataset batches: `data/sf_ny/batches/` (test_set.csv, batch_1..batch_5.csv)
+- dataset-specific outputs: `src/cumulative_training/sf_ny_data/` (models_persistence, BENCHMARK_SUMMARY.md, plots)
+- generic plotting: `src/incremental_benchmarking/plot_incremental_metrics.py`, `plot_incremental_benchmark.py`
 
-Repro tips
+## Related Adjacent Docs
 
-- Ensure the repo root is on PYTHONPATH when running (so `src/models_v2` imports resolve).
-- Use the provided batch CSVs to reproduce exact runs.
-- If running on a different machine, set the same random seed for consistent batching.
-
-If you want, I can also add a small helper script in `scripts/` to load a persisted model and print per‑class metrics — would you like that?
+- `../cumulative_training/README.md` — dataset-focused run instructions and quick findings
+- `../WORKSTREAMS.md` — repo-wide workstream map and recommended reading order
+- `../ceiling_study/README.md` — ceiling-study docs (distinct experimental track that reuses `models_v2` foundation)
