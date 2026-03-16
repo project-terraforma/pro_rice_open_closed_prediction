@@ -19,7 +19,7 @@ This is a binary classification task on a strongly imbalanced distribution that 
 - Overture currently does not impose constraints on trying external data sources.
 
 ## Important Non-Goal / Exclusions
-- `data/matching_validation/samples_3k_project_c_updated.csv` is not for open/closed prediction.
+- `data/archive/matching_validation/samples_3k_project_c_updated.csv` is not for open/closed prediction.
 - That dataset is for place matching validation (`label=1` match, `label=0` no match), so it must not be used as open/closed ground truth.
 
 ## Modeling Implications

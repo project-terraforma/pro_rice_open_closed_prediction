@@ -74,7 +74,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--alex-assets-dir",
         type=Path,
-        default=Path(__file__).resolve().parents[3] / "places-status-engine" / "assets",
+        default=Path(__file__).resolve().parents[2] / "data" / "alex_assets",
     )
     parser.add_argument("--alex-cities", nargs="+", default=["sf", "nyc"])
     parser.add_argument("--cv-n-splits", type=int, default=5)

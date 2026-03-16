@@ -15,19 +15,22 @@ Protocol:
 5. Compare against baselines.
 """
 
+import sys
+import os
 import pandas as pd
 import numpy as np
 from pathlib import Path
+import json
+import ast
 
-from build_sim_batches import build_sim_batches
+# Add src to path
+sys.path.insert(0, '/Users/claricepark/Desktop/pro_rice_open_closed_prediction/src/models_v2')
+
+from build_sim_batches import build_sim_batches, load_and_prepare_data, extract_primary_category, extract_primary_source
 from triage_policy import TriagePolicy, print_triage_summary
 from label_store import LabelStore
 from logistic_regression_v2 import UnifiedLogisticRegression
-
-
-REPO_ROOT = Path(__file__).resolve().parents[2]
-DATA_DIR = REPO_ROOT / "data" / "project_c_samples"
-ARCHIVE_ARTIFACTS_DIR = REPO_ROOT / "artifacts" / "archive" / "label_coverage"
+from shared_metrics import compute_metrics
 
 
 class LabelCoverageSimulation:
@@ -291,10 +294,10 @@ def main():
     print(f"{'='*70}")
     
     # Load data (use parquet for proper types)
-    data_path = DATA_DIR / "project_c_samples.parquet"
-    train_path = DATA_DIR / "train_split.parquet"
-    val_path = DATA_DIR / "val_split.parquet"
-    test_path = DATA_DIR / "test_split.parquet"
+    data_path = "/Users/claricepark/Desktop/pro_rice_open_closed_prediction/data/project_c_samples/project_c_samples.parquet"
+    train_path = "/Users/claricepark/Desktop/pro_rice_open_closed_prediction/data/project_c_samples/train_split.parquet"
+    val_path = "/Users/claricepark/Desktop/pro_rice_open_closed_prediction/data/project_c_samples/val_split.parquet"
+    test_path = "/Users/claricepark/Desktop/pro_rice_open_closed_prediction/data/project_c_samples/test_split.parquet"
     
     # Load full data from parquet
     df = pd.read_parquet(data_path)
@@ -357,10 +360,11 @@ def main():
     print(history.to_string(index=False))
     
     # Save results
-    ARCHIVE_ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
+    output_dir = Path("/Users/claricepark/Desktop/pro_rice_open_closed_prediction/artifacts/archive/label_coverage")
+    output_dir.mkdir(parents=True, exist_ok=True)
     
-    history.to_csv(ARCHIVE_ARTIFACTS_DIR / "simulation_history.csv", index=False)
-    print(f"\nResults saved to {ARCHIVE_ARTIFACTS_DIR}")
+    history.to_csv(output_dir / "simulation_history.csv", index=False)
+    print(f"\nResults saved to {output_dir}")
 
 
 if __name__ == "__main__":

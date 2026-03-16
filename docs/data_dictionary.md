@@ -127,7 +127,7 @@ This document explains each column in the parquet dataset and how it might help 
 - Any known edge cases in `sources.property` merging behavior.
 
 ## Important Dataset Scope Note
-- `data/matching_validation/samples_3k_project_c_updated.csv` is **not** an open/closed dataset.
+- `data/archive/matching_validation/samples_3k_project_c_updated.csv` is **not** an open/closed dataset.
 - It is a place-matching validation dataset:
   - `label = 1` means the pair matches.
   - `label = 0` means the pair does not match.

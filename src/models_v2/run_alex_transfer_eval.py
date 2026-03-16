@@ -177,7 +177,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--alex-assets-dir",
         type=Path,
-        default=Path(__file__).resolve().parents[3] / "places-status-engine" / "assets",
+        default=Path(__file__).resolve().parents[2] / "data" / "alex_assets",
         help="Directory containing Alex raw and labeled city parquet files.",
     )
     parser.add_argument(

@@ -11,4 +11,13 @@ __pycache__/
 # Data files (optional, if large or private)
 data/sf_ny/
 data/project_c_samples/batches/
-src/cumalitive_training/projectc_data/XGBOOST_PRECISION_ANALYSIS.md
+src/cumulative_training/projectc_data/XGBOOST_PRECISION_ANALYSIS.md
+
+# Local Alex assets used by transfer/retrain workflows.
+# Keep the directories and README files, but do not track the large local datasets.
+data/alex_assets/*
+!data/alex_assets/README.md
+
+# Local/generated filtered Alex exports.
+artifacts/alex_filtered_datasets/*
+!artifacts/alex_filtered_datasets/README.md

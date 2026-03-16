@@ -5,9 +5,14 @@ This module scores confidence and impact, then applies deterministic routing
 to identify high-confidence cases vs. uncertain cases needing review.
 """
 
+from pathlib import Path
+
 import pandas as pd
 import numpy as np
-from typing import Dict, Tuple
+
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+DATA_DIR = REPO_ROOT / "data" / "project_c_samples"
 
 
 class TriagePolicy:
@@ -180,16 +185,13 @@ def print_triage_summary(routed_df: pd.DataFrame) -> None:
 
 if __name__ == "__main__":
     # Example usage
-    import sys
-    sys.path.insert(0, '/Users/claricepark/Desktop/pro_rice_open_closed_prediction/src/models_v2')
-    
     from build_sim_batches import build_sim_batches, load_and_prepare_data
     
-    data_path = "/Users/claricepark/Desktop/pro_rice_open_closed_prediction/data/project_c_samples/project_c_samples.csv"
-    train_path = "/Users/claricepark/Desktop/pro_rice_open_closed_prediction/data/project_c_samples/train_split.parquet"
-    val_path = "/Users/claricepark/Desktop/pro_rice_open_closed_prediction/data/project_c_samples/val_split.parquet"
+    data_path = DATA_DIR / "project_c_samples.csv"
+    train_path = DATA_DIR / "train_split.parquet"
+    val_path = DATA_DIR / "val_split.parquet"
     
-    df = load_and_prepare_data(data_path, train_path, val_path)
+    df = load_and_prepare_data(str(data_path), str(train_path), str(val_path))
     batches, _ = build_sim_batches(df, n_batches=3, seed=42)
     
     # Mock predictions

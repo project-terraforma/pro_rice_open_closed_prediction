@@ -5,11 +5,17 @@ Splits train+val data into stratified fake "release" batches while preserving
 label distribution and key segments per batch.
 """
 
+import ast
+from pathlib import Path
+
 import pandas as pd
 import numpy as np
 from typing import List, Tuple
-import json
 import os
+
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+DATA_DIR = REPO_ROOT / "data" / "project_c_samples"
 
 
 def extract_primary_category(categories_str):
@@ -18,7 +24,7 @@ def extract_primary_category(categories_str):
         if pd.isna(categories_str):
             return None
         if isinstance(categories_str, str):
-            categories_dict = eval(categories_str)
+            categories_dict = ast.literal_eval(categories_str)
         else:
             categories_dict = categories_str
         return categories_dict.get('primary', None)
@@ -32,7 +38,7 @@ def extract_primary_source(sources_str):
         if pd.isna(sources_str):
             return None
         if isinstance(sources_str, str):
-            sources_list = eval(sources_str)
+            sources_list = ast.literal_eval(sources_str)
         else:
             sources_list = sources_str
         if sources_list and len(sources_list) > 0:
@@ -168,11 +174,11 @@ def load_and_prepare_data(
 
 if __name__ == "__main__":
     # Example usage
-    data_path = "/Users/claricepark/Desktop/pro_rice_open_closed_prediction/data/project_c_samples/project_c_samples.csv"
-    train_path = "/Users/claricepark/Desktop/pro_rice_open_closed_prediction/data/project_c_samples/train_split.parquet"
-    val_path = "/Users/claricepark/Desktop/pro_rice_open_closed_prediction/data/project_c_samples/val_split.parquet"
+    data_path = DATA_DIR / "project_c_samples.csv"
+    train_path = DATA_DIR / "train_split.parquet"
+    val_path = DATA_DIR / "val_split.parquet"
     
-    df = load_and_prepare_data(data_path, train_path, val_path)
+    df = load_and_prepare_data(str(data_path), str(train_path), str(val_path))
     batches, metadata = build_sim_batches(df, n_batches=6, seed=42)
     
     print(f"\n{'='*60}")
