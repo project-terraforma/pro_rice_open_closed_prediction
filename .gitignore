@@ -8,10 +8,14 @@ __pycache__/
 # Mac system files
 .DS_Store
 
-# Data files (optional, if large or private)
+# Data files (non parquets are too large)
 data/sf_ny/
 data/project_c_samples/batches/
-src/cumulative_training/projectc_data/XGBOOST_PRECISION_ANALYSIS.md
+src/cumalitive_training/projectc_data/XGBOOST_PRECISION_ANALYSIS.md
+
+# Model files (too large)
+*.pkl
+*.joblib
 
 # Local Alex assets used by transfer/retrain workflows.
 # Keep the directories and README files, but do not track the large local datasets.
