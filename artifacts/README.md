@@ -56,16 +56,27 @@ If you are looking for the current ceiling-study outputs, start with:
 - [`projectc_two_bucket_oof_rf_final_pass1`](./projectc_two_bucket_oof_rf_final_pass1)
   - two-bucket triage analysis outputs
 
+## Incremental / Cumulative training outputs
+
+The incremental training and benchmarking workstream produces dataset-specific artifacts, plots and persisted models. The primary artifact directories for this workstream are:
+
+- [`alex_filtered_datasets`](./alex_filtered_datasets)
+  - exported Alex-filtered SF/NY datasets used as inputs for incremental benchmarks
+- [`alex_transfer_rf_final_pass1`](./alex_transfer_rf_final_pass1)
+  - Alex transfer evaluation outputs (relevant for downstream transfer checks)
+- [`alex_retrain_rf_final_pass1`](./alex_retrain_rf_final_pass1)
+  - Alex retrain evaluation outputs
+- [`cumulative_sf_ny_incremental_results`](./cumulative_sf_ny_incremental_results)
+  - incremental benchmarking outputs for the alex-filtered SF/NY experiments (metrics, `sf_ny_alex_incremental_results.md`, and plots). This directory corresponds to `src/cumulative_training/sf_ny_data/` code outputs.
+- [`cumulative_sf_ny_models_persistence`](./cumulative_sf_ny_models_persistence)
+  - exported serialized models (per-batch .pkl files) produced by the SF/NY incremental runs — mirrors `src/cumulative_training/sf_ny_data/models_persistence/`.
+
 ## Other Active Or Adjacent Outputs
 
 - [`projectc_oof_rf_final_pass1`](./projectc_oof_rf_final_pass1)
   - project-specific OOF evaluation outputs
 - [`alex_filtered_datasets`](./alex_filtered_datasets)
   - exported filtered Alex datasets and manifest
-
-Incremental training / benchmarking outputs:
-
-- `TODO - add the current artifact directories for the incremental-training / benchmarking workstream`
 
 ## Historical / Reference Outputs
 

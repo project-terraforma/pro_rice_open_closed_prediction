@@ -24,10 +24,11 @@ Use this file to answer three questions quickly:
 - `Incremental Training / Benchmarking`
   - status: active, separate workstream
   - main areas:
-    - `../src/incremental_benchmarking/`
-    - `../src/cumulative_training/`
-  - docs: [`incremental_benchmarking/README.md`](incremental_benchmarking/README.md)
-  - note: this workstream is current and separate; it may reuse pieces of the shared v2 foundation, but it is not part of the main ceiling-study reading path
+    - `../src/incremental_benchmarking/` (generic drivers & plotting utilities)
+    - `../src/cumulative_training/` (dataset-specific drivers, persistence artifacts and plots)
+  - docs: [`incremental_benchmarking/README.md`](incremental_benchmarking/README.md) and [`cumulative_training/README.md`](cumulative_training/README.md)
+  - artifacts: see `../artifacts/README.md` → `alex_filtered_datasets/`, `alex_transfer_rf_final_pass1/`, `alex_retrain_rf_final_pass1/`
+  - note: this workstream is current and separate; it reuses the shared `models_v2` foundation (featurizer, feature bundles) but follows a distinct experimental path from the ceiling-study docs
 - `Archive / Historical`
   - status: reference only unless a local doc says otherwise
   - main areas:
