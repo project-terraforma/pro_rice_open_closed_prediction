@@ -100,6 +100,10 @@ These are the main scripts to look at if you are following the current ceiling-s
 - ceiling-study docs:
   - [`../../docs/README.md`](../../docs/README.md)
   - [`../../docs/ceiling_study/README.md`](../../docs/ceiling_study/README.md)
+- adjacent planning / handoff docs:
+  - [`../../docs/adjacent/planning/open_triage_policy_plan.md`](../../docs/adjacent/planning/open_triage_policy_plan.md)
+  - [`../../docs/adjacent/planning/top_budget_triage_plan.md`](../../docs/adjacent/planning/top_budget_triage_plan.md)
+  - [`../../docs/adjacent/handoff/alex_dataset_handoff.md`](../../docs/adjacent/handoff/alex_dataset_handoff.md)
 - repo-wide workstream map:
   - [`../../docs/WORKSTREAMS.md`](../../docs/WORKSTREAMS.md)
 

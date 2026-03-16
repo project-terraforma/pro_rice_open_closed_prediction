@@ -75,15 +75,17 @@ These documents are the source of truth for the `ceiling study` track. The ceili
   - rules for creating and evaluating v2 bundles
 - [`ceiling_study/feature_bundle_v2_rationale.md`](ceiling_study/feature_bundle_v2_rationale.md)
   - why the v2 bundles were chosen
-- [`ceiling_study/open_triage_policy_plan.md`](ceiling_study/open_triage_policy_plan.md)
-  - proposed two-bucket open-safe / review-queue follow-up
-- [`ceiling_study/top_budget_triage_plan.md`](ceiling_study/top_budget_triage_plan.md)
-  - proposed fixed-budget top-risk review follow-up
 
 ## Other Active Or Adjacent Docs
 
 - [`adjacent/labeling_simulation/README.md`](adjacent/labeling_simulation/README.md)
   - labeling / simulation / deployment-oriented docs outside the main ceiling-study path
+- [`adjacent/handoff/alex_dataset_handoff.md`](adjacent/handoff/alex_dataset_handoff.md)
+  - handoff / session-transfer context for Alex-dataset follow-up work
+- [`adjacent/planning/open_triage_policy_plan.md`](adjacent/planning/open_triage_policy_plan.md)
+  - planning doc for the open-safe / review-queue follow-up
+- [`adjacent/planning/top_budget_triage_plan.md`](adjacent/planning/top_budget_triage_plan.md)
+  - planning doc for the fixed-budget review-prioritization follow-up
 
 Incremental training / benchmarking docs:
 

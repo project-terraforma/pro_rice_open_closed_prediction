@@ -21,8 +21,6 @@ This directory contains the current source-of-truth documentation for the schema
 - [`hpo_optuna_narrow_design.md`](./hpo_optuna_narrow_design.md)
 - [`feature_bundle_v2_conventions.md`](./feature_bundle_v2_conventions.md)
 - [`feature_bundle_v2_rationale.md`](./feature_bundle_v2_rationale.md)
-- [`open_triage_policy_plan.md`](./open_triage_policy_plan.md)
-- [`top_budget_triage_plan.md`](./top_budget_triage_plan.md)
 
 ## Supporting Files
 
@@ -30,3 +28,9 @@ This directory contains the current source-of-truth documentation for the schema
 - [`feature_bundles.yaml`](./feature_bundles.yaml)
 - [`feature_inventory.csv`](./feature_inventory.csv)
 - [`feature_rationale.md`](./feature_rationale.md)
+
+## Related Adjacent Docs
+
+- [`../adjacent/handoff/alex_dataset_handoff.md`](../adjacent/handoff/alex_dataset_handoff.md)
+- [`../adjacent/planning/open_triage_policy_plan.md`](../adjacent/planning/open_triage_policy_plan.md)
+- [`../adjacent/planning/top_budget_triage_plan.md`](../adjacent/planning/top_budget_triage_plan.md)

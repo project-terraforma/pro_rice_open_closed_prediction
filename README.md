@@ -27,7 +27,8 @@ The current repo is organized around:
   - main artifacts: [`artifacts/README.md`](artifacts/README.md)
 - `incremental training / benchmarking`
   - active
-  - findings summary: `TODO - add current summary and key results for this workstream`
+  - findings summary: `pending workstream-owner summary`
+  - current landing page: [`docs/incremental_benchmarking/README.md`](docs/incremental_benchmarking/README.md)
   - main areas:
     - `src/incremental_benchmarking/`
     - `src/cumalitive_training/`
@@ -43,6 +44,7 @@ The current repo is organized around:
 - If you want the repo-wide status map:
   - [`docs/WORKSTREAMS.md`](docs/WORKSTREAMS.md)
 - If you want the incremental-training / benchmarking work:
+  - [`docs/incremental_benchmarking/README.md`](docs/incremental_benchmarking/README.md)
   - `src/incremental_benchmarking/`
   - `src/cumalitive_training/`
 
@@ -80,6 +82,12 @@ Use these for the current schema-native v2 study:
 - [`docs/ceiling_study/hpo_results_summary.md`](docs/ceiling_study/hpo_results_summary.md)
 - [`docs/ceiling_study/feature_importance_results.md`](docs/ceiling_study/feature_importance_results.md)
 - [`docs/ceiling_study/feature_bundle_v2_conventions.md`](docs/ceiling_study/feature_bundle_v2_conventions.md)
+
+## Incremental Workstream Docs
+
+Use this as the current landing page until the workstream summary is filled in:
+
+- [`docs/incremental_benchmarking/README.md`](docs/incremental_benchmarking/README.md)
 
 ## Notes
 

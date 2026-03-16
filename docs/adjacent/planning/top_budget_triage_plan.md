@@ -141,8 +141,8 @@ It is only a follow-up to test whether the same model might still have value as 
 
 If continuing in a fresh session, start with:
 
-1. `docs/ceiling_study/open_triage_policy_plan.md`
-2. `docs/ceiling_study/top_budget_triage_plan.md`
+1. `docs/adjacent/planning/open_triage_policy_plan.md`
+2. `docs/adjacent/planning/top_budget_triage_plan.md`
 3. `artifacts/projectc_oof_rf_final_pass1/projectc_oof_predictions.csv`
 4. `src/models_v2/run_two_bucket_analysis.py`
 

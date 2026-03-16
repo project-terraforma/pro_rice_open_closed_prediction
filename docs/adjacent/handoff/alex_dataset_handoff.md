@@ -227,7 +227,7 @@ In a new session, likely first files to open:
 1. `README.md`
 2. `docs/ceiling_study/eval_protocol.md`
 3. `docs/ceiling_study/hpo_results_summary.md`
-4. `docs/ceiling_study/alex_dataset_handoff.md`
+4. `docs/adjacent/handoff/alex_dataset_handoff.md`
 5. `src/models_v2/run_holdout_test_eval.py`
 
 Then inspect the final RF artifacts:

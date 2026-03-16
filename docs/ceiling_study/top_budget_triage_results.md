@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Record the first top-budget review-prioritization check proposed in `docs/ceiling_study/top_budget_triage_plan.md`.
+Record the first top-budget review-prioritization check proposed in `docs/adjacent/planning/top_budget_triage_plan.md`.
 
 This analysis treats the current model as a ranking tool:
 - sort by `p(closed)` descending
