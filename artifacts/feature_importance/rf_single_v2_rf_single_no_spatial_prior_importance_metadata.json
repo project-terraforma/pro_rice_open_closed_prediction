@@ -1,0 +1,11 @@
+{
+  "model_key": "rf",
+  "mode": "single",
+  "feature_bundle": "v2_rf_single_no_spatial_prior",
+  "training_data": "train_split + val_split",
+  "n_rows_fit": 3082,
+  "n_open_rows_fit": 2800,
+  "n_closed_rows_fit": 282,
+  "importance_type": "RandomForestClassifier.feature_importances_",
+  "output_csv": "artifacts/feature_importance/rf_single_v2_rf_single_no_spatial_prior_importance.csv"
+}
