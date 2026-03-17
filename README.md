@@ -83,9 +83,22 @@ Use these for the current schema-native v2 study:
 - [`docs/ceiling_study/feature_importance_results.md`](docs/ceiling_study/feature_importance_results.md)
 - [`docs/ceiling_study/feature_bundle_v2_conventions.md`](docs/ceiling_study/feature_bundle_v2_conventions.md)
 
-## Incremental Workstream Docs
+## Cumulative Training Docs
 
-Use this as the current landing page until the workstream summary is filled in:
+Use these for the cumulative / incremental training experiments and reproducibility:
+
+- [`docs/cumulative_training/README.md`](docs/cumulative_training/README.md)
+  - dataset-focused run instructions and quick findings for SF/NY experiments
+- [`docs/incremental_benchmarking/INCREMENTAL_FINDINGS.md`](docs/incremental_benchmarking/INCREMENTAL_FINDINGS.md)
+  - curated findings, reproduction notes, and practical recommendations
+- `src/cumulative_training/sf_ny_data/BENCHMARK_SUMMARY.md`
+  - detailed numeric summary and timing notes for the SF/NY alex-filtered experiments
+- `src/cumulative_training/sf_ny_data/run_incremental_benchmark_sf_ny.py`
+  - dataset-specific driver that created the SF/NY incremental results
+- `src/incremental_benchmarking/run_incremental_benchmark_all_models.py`
+  - generic project_c-style incremental driver (per-batch vs single-run comparisons)
+
+## Incremental Workstream Docs
 
 - [`docs/incremental_benchmarking/README.md`](docs/incremental_benchmarking/README.md)
 
