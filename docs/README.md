@@ -93,8 +93,6 @@ These documents are the source of truth for the `ceiling study` track. The ceili
   - overview and run pointers
 - [`incremental_benchmarking/incremental_results.md`](../src/incremental_benchmarking/incremental_results.md)
   - raw incremental run summary (per-batch metrics / single-run comparison)
-- [`incremental_benchmarking/INCREMENTAL_FINDINGS.md`](incremental_benchmarking/INCREMENTAL_FINDINGS.md)
-  - curated findings, reproduction notes, and practical recommendations
 
 ## Historical / Reference Docs
 
