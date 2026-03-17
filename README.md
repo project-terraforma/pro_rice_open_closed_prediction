@@ -83,6 +83,10 @@ Use these for the current schema-native v2 study:
 - [`docs/ceiling_study/feature_importance_results.md`](docs/ceiling_study/feature_importance_results.md)
 - [`docs/ceiling_study/feature_bundle_v2_conventions.md`](docs/ceiling_study/feature_bundle_v2_conventions.md)
 
+## Incremental Workstream Docs
+
+- [`docs/incremental_benchmarking/README.md`](docs/incremental_benchmarking/README.md)
+
 ## Cumulative Training Docs
 
 Use these for the cumulative / incremental training experiments and reproducibility:
@@ -97,10 +101,6 @@ Use these for the cumulative / incremental training experiments and reproducibil
   - dataset-specific driver that created the SF/NY incremental results
 - `src/incremental_benchmarking/run_incremental_benchmark_all_models.py`
   - generic project_c-style incremental driver (per-batch vs single-run comparisons)
-
-## Incremental Workstream Docs
-
-- [`docs/incremental_benchmarking/README.md`](docs/incremental_benchmarking/README.md)
 
 ## Notes
 
