@@ -87,10 +87,14 @@ These documents are the source of truth for the `ceiling study` track. The ceili
 - [`adjacent/planning/top_budget_triage_plan.md`](adjacent/planning/top_budget_triage_plan.md)
   - planning doc for the fixed-budget review-prioritization follow-up
 
-Incremental training / benchmarking docs:
+## Incremental training / benchmarking docs:
 
 - [`incremental_benchmarking/README.md`](incremental_benchmarking/README.md)
-  - placeholder index for this workstream until its docs are curated
+  - overview and run pointers
+- [`incremental_benchmarking/incremental_results.md`](../src/incremental_benchmarking/incremental_results.md)
+  - raw incremental run summary (per-batch metrics / single-run comparison)
+- [`incremental_benchmarking/INCREMENTAL_FINDINGS.md`](incremental_benchmarking/INCREMENTAL_FINDINGS.md)
+  - curated findings, reproduction notes, and practical recommendations
 
 ## Historical / Reference Docs
 
