@@ -8,12 +8,21 @@
 
 This repository contains multiple lines of work around predicting whether places are `open` or `closed` from Overture-style data and related derived signals.
 
+At a high level, the repo separates two main questions:
+
+- how well can we predict `open` vs `closed` using the available data together with the schema-native features we engineered from it?
+- `placeholder for workstream-owner summary`
+
 The current repo is organized around:
 
 - a shared `v2` modeling foundation
-- a `ceiling study` track focused on schema-native performance limits
+- a `ceiling study` track focused on whether low- and medium-cost schema-native features could already meet the production gate on the provided Project C sample data
 - an `incremental training / benchmarking` track
 - archived historical labeling, modeling, and exploratory work
+
+In this repo, `ceiling study` means the main evaluation track for testing whether low- and medium-cost schema-native features alone were enough to reach the project's production gate on the provided Project C sample data. The `low`, `medium`, and `high` cost definitions for these engineered features are documented in [`docs/ceiling_study/feature_inventory.csv`](docs/ceiling_study/feature_inventory.csv) and [`docs/ceiling_study/feature_rationale.md`](docs/ceiling_study/feature_rationale.md). The idea was to train on part of that dataset and evaluate on a holdout split to see whether a relatively cheap ML approach already looked strong enough for this problem, or whether better performance would likely require more expensive features, a larger training set, or both. In practice, this study exposed meaningful limitations, especially on closed-place performance. One likely challenge is that the roughly `3k`-row sample is fairly spread out, which may make it harder for the model to learn a strong closed signal. As a result, the study suggests that low/medium-cost schema-native features alone may not be sufficient here, but it does not fully resolve whether the main bottleneck is feature cost, dataset size, or both.
+
+Parallel explanation for the incremental training / benchmarking workstream: `placeholder for workstream-owner summary`
 
 ## Current Status
 
@@ -22,11 +31,14 @@ The current repo is organized around:
   - main code: [`src/models_v2/README.md`](src/models_v2/README.md)
 - `ceiling study`
   - active
+  - purpose: test whether low/medium-cost schema-native features could reach production-level performance on the provided Project C sample split
+  - data scope: train/holdout evaluation on the provided Project C sample data, not a separately constructed dataset
   - current confirmed diagnostic leader: `RandomForest`, `single`, `v2_rf_single_no_spatial_prior`
   - main docs: [`docs/README.md`](docs/README.md)
   - main artifacts: [`artifacts/README.md`](artifacts/README.md)
 - `incremental training / benchmarking`
   - active
+  - purpose: `placeholder for workstream-owner high-level motivation`
   - findings summary: `pending workstream-owner summary`
   - current landing page: [`docs/incremental_benchmarking/README.md`](docs/incremental_benchmarking/README.md)
   - main areas:
@@ -41,12 +53,14 @@ The current repo is organized around:
   - [`docs/README.md`](docs/README.md)
   - [`src/models_v2/README.md`](src/models_v2/README.md)
   - [`artifacts/README.md`](artifacts/README.md)
+  - use this path if you want the main answer to: `can low/medium-cost schema-native features on the Project C sample data reach the production gate, or would this likely require more data or more expensive features?`
 - If you want the repo-wide status map:
   - [`docs/WORKSTREAMS.md`](docs/WORKSTREAMS.md)
 - If you want the incremental-training / benchmarking work:
   - [`docs/incremental_benchmarking/README.md`](docs/incremental_benchmarking/README.md)
   - `src/incremental_benchmarking/`
   - `src/cumulative_training/`
+  - high-level motivation: `placeholder for workstream-owner summary`
 
 ## Repository Layout
 
@@ -75,7 +89,9 @@ pip install -r requirements.txt
 
 ## Ceiling-Study Docs
 
-Use these for the current schema-native v2 study:
+Use these for the current schema-native v2 study.
+
+This is the main documentation path for the workstream that tests whether the current low/medium-cost schema-native feature setup can achieve production-level performance on the provided Project C sample data:
 
 - [`docs/ceiling_study/README.md`](docs/ceiling_study/README.md)
 - [`docs/ceiling_study/eval_protocol.md`](docs/ceiling_study/eval_protocol.md)
@@ -106,4 +122,3 @@ Use these for the cumulative / incremental training experiments and reproducibil
 
 - The top-level README is intentionally brief and repo-level.
 - Track-specific details should live in the track docs rather than in this file.
-- The incremental-training / benchmarking findings section above is a placeholder for a future summary.
