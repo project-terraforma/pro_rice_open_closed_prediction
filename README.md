@@ -42,8 +42,8 @@ Both cumulative training and incremental benchmarking intentionally reuses the `
   - main artifacts: [`artifacts/README.md`](artifacts/README.md)
 - `incremental training / benchmarking`
   - active
-  - purpose: `placeholder for workstream-owner high-level motivation`
-  - findings summary: `pending workstream-owner summary`
+  - purpose: evaluate incremental warm-start workflows (persisted model updates across data releases) and dataset-size sufficiency for stable closed-class learning
+  - findings summary: see `docs/incremental_benchmarking/INCREMENTAL_FINDINGS.md` and `docs/cumulative_training/README.md`
   - current landing page: [`docs/incremental_benchmarking/README.md`](docs/incremental_benchmarking/README.md)
   - main areas:
     - `src/incremental_benchmarking/`
@@ -64,7 +64,7 @@ Both cumulative training and incremental benchmarking intentionally reuses the `
   - [`docs/incremental_benchmarking/README.md`](docs/incremental_benchmarking/README.md)
   - `src/incremental_benchmarking/`
   - `src/cumulative_training/`
-  - high-level motivation: `placeholder for workstream-owner summary`
+  - high-level motivation: evaluate whether warm-start workflows can match full-retrain performance and whether the provided (~3k) sample is sufficient to learn a stable closed-class signal
 
 ## Repository Layout
 
