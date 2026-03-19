@@ -25,3 +25,5 @@ data/alex_assets/*
 # Local/generated filtered Alex exports.
 artifacts/alex_filtered_datasets/*
 !artifacts/alex_filtered_datasets/README.md
+config.bat
+node_modules
