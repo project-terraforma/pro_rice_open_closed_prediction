@@ -11,7 +11,7 @@ This repository contains multiple lines of work around predicting whether places
 At a high level, the repo separates two main questions:
 
 - how well can we predict `open` vs `closed` using the available data together with the schema-native features we engineered from it?
-- `placeholder for workstream-owner summary`
+- can models be incrementally trained across data releases (warm‑start) to match full-retrain performance, and what minimum dataset size is required for stable closed-class learning?
 
 The current repo is organized around:
 
